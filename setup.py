@@ -117,13 +117,14 @@ class CustomInstallCommand(install):
 # Standard setup.py configuration
 setup(
     name="anon-python-sdk",
-    version="0.0.1",
+    version="0.0.2",
     description="Python SDK for Anon",
     packages=find_packages(),
     package_data={"anon_python_sdk": ["bin/*"]},
     include_package_data=True,
     install_requires=[
         "requests",
+        "stem"
     ],
     cmdclass={
         "install": CustomInstallCommand,  # Use the custom install command
@@ -133,4 +134,5 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
+    python_requires=">=3.6",
 )

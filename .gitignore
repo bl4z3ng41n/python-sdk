@@ -4,3 +4,4 @@ anon_python_sdk.egg-info
 .pytest_cache
 tests/__pycache__
 dist/
+anon_python_sdk/__pycache__
