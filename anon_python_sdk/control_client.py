@@ -75,3 +75,54 @@ class ControlClient:
                 )
             )
         return formatted_circuits
+    
+    def get_circuit(self, circuit_id: int) -> Optional[Circuit]:
+        """
+        Fetch a specific circuit by its ID.
+        Args:
+            circuit_id (int): The ID of the circuit to fetch.
+        Returns:
+            Optional[Circuit]: The Circuit object if found, or None if the circuit doesn't exist.
+        """
+        if not self.controller:
+            raise AnonError("Not connected to the control port.")
+
+        try:
+            circuits = self.get_circuits()
+            for circuit in circuits:
+                if circuit.id == circuit_id:
+                    return circuit
+            return None  # Circuit not found
+        except Exception as e:
+            raise AnonError(f"Error fetching circuit {circuit_id}: {e}")
+    
+    def create_circuit(self, relays: List[str] = None) -> int:
+        """
+        Create a new circuit through the specified relays.
+        Args:
+            relays (List[str]): A list of relay fingerprints or nicknames.
+        Returns:
+            int: The ID of the newly created circuit.
+        """
+        if not self.controller:
+            raise AnonError("Not connected to the control port.")
+
+        try:
+            circuit_id = self.controller.extend_circuit(0, relays)
+            return circuit_id
+        except Exception as e:
+            raise AnonError(f"Error creating circuit: {e}")
+
+    def close_circuit(self, circuit_id: int):
+        """
+        Close an existing circuit.
+        Args:
+            circuit_id (int): The ID of the circuit to close.
+        """
+        if not self.controller:
+            raise AnonError("Not connected to the control port.")
+
+        try:
+            self.controller.close_circuit(circuit_id)
+        except Exception as e:
+            raise AnonError(f"Error closing circuit {circuit_id}: {e}")
