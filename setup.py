@@ -4,14 +4,13 @@ import platform
 import requests
 import zipfile
 import tempfile
-import shutil
 from pathlib import Path
 import stat
 
 # Constants
 OWNER = "anyone-protocol"
 REPO = "ator-protocol"
-VERSION = "v0.4.9.9"
+VERSION = "v0.4.9.10"
 RELEASE_URL = f"https://api.github.com/repos/{OWNER}/{REPO}/releases/tags/{VERSION}"
 
 PLATFORM_MAP = {
@@ -22,6 +21,7 @@ PLATFORM_MAP = {
 
 ARCH_MAP = {
     "arm64": "arm64",
+    "aarch64": "arm64",
     "x86_64": "amd64",
 }
 
@@ -45,79 +45,49 @@ class CustomInstallCommand(install):
 
         platform_name = PLATFORM_MAP[system]
         arch_name = ARCH_MAP[arch]
+
         asset_name = f"anon-live-{platform_name}-{arch_name}.zip"
-        asset_dir = f"anon-live-{platform_name}-{arch_name}"
+        binary_dir = Path.home() / ".anon_python_sdk" / "bin"
+        binary_dir.mkdir(parents=True, exist_ok=True)
 
         # Fetch release data
         print("Fetching release information...")
         response = requests.get(RELEASE_URL)
         response.raise_for_status()
-        release_data = response.json()
-
-        # Find the correct asset
-        download_url = ""
-        for asset in release_data.get("assets", []):
-            if asset["name"] == asset_name:
-                download_url = asset["browser_download_url"]
-                print(f"Download URL: {download_url}")
-                break
+        assets = response.json().get("assets", [])
+        download_url = next(
+            (asset["browser_download_url"] for asset in assets if asset["name"] == asset_name),
+            None,
+        )
 
         if not download_url:
-            print(f"Platform {platform_name} ({arch_name}) is not supported.")
-            raise ValueError("Unsupported platform/architecture combination")
+            print(f"Binary for platform {platform_name} and architecture {arch_name} is not available.")
+            return
 
-        # Prepare temporary paths
-        tmp_dir = Path(tempfile.gettempdir())
-        download_dest = tmp_dir / asset_name
-        extract_dest = tmp_dir / asset_dir
+        # Download and extract the binary
+        print(f"Downloading binary from {download_url}...")
+        with tempfile.TemporaryDirectory() as tmpdir:
+            zip_path = Path(tmpdir) / asset_name
+            with requests.get(download_url, stream=True) as r:
+                r.raise_for_status()
+                with open(zip_path, "wb") as f:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        f.write(chunk)
+            with zipfile.ZipFile(zip_path, "r") as zip_ref:
+                zip_ref.extractall(binary_dir)
 
-        print(f"Temporary download path: {download_dest}")
-        print(f"Temporary extraction path: {extract_dest}")
-
-        # Download the binary
-        self.download_file(download_url, download_dest)
-
-        # Extract the binary
-        print("Extracting the binary...")
-        self.unzip_file(download_dest, extract_dest)
-
-        # Copy files to the final destination
-        binary_dir = Path.home() / ".anon-python-sdk" / "bin"
-        binary_dir.mkdir(parents=True, exist_ok=True)
-
-        for file in extract_dest.iterdir():
+        # Make the binary executable
+        for file in binary_dir.iterdir():
             if file.is_file():
-                self.make_executable(file)
-                shutil.copy(file, binary_dir / file.name)
+                file.chmod(file.stat().st_mode | stat.S_IEXEC)
 
-        print("Anon binary installation complete!")
-
-    @staticmethod
-    def     download_file(url, output_path):
-        """Download a file from a URL."""
-        print(f"Downloading from {url}...")
-        response = requests.get(url, stream=True)
-        response.raise_for_status()
-        with open(output_path, "wb") as file:
-            for chunk in response.iter_content(chunk_size=8192):
-                file.write(chunk)
-
-    @staticmethod
-    def unzip_file(zip_file_path, output_dir):
-        """Extract a zip file to the specified directory."""
-        with zipfile.ZipFile(zip_file_path, "r") as zip_ref:
-            zip_ref.extractall(output_dir)
-
-    @staticmethod
-    def make_executable(file_path):
-        """Make a file executable."""
-        file_path.chmod(file_path.stat().st_mode | stat.S_IEXEC)
+        print(f"Binary installed to {binary_dir}")
 
 
 # Standard setup.py configuration
 setup(
-    name="anon-python-sdk",
-    version="0.0.3",
+    name="anon_python_sdk",
+    version="0.0.8",
     description="Python SDK for Anon",
     packages=find_packages(),
     package_data={"anon_python_sdk": ["bin/*"]},

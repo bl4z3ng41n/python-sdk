@@ -1,10 +1,12 @@
-import subprocess
-import platform
 from pathlib import Path
+import platform
+import subprocess
+import threading
+from .anon_config import AnonConfig, create_anon_config_file
 
 # Path to the binary directory and default anonrc file
-BINARY_DIR = Path.home() / ".anon-python-sdk" / "bin"
-DEFAULT_ANONRC = Path("/usr/local/etc/anon") / "anonrc"
+BINARY_DIR = Path.home() / ".anon_python_sdk" / "bin"
+DEFAULT_ANONRC = Path("./anonrc")
 
 # Platform-specific binary names
 PLATFORM_MAP = {
@@ -13,74 +15,98 @@ PLATFORM_MAP = {
     "windows": "anon.exe",
 }
 
-def get_binary_path():
-    """
-    Determine the path to the Anon binary based on the platform.
-    Returns:
-        Path: Path to the binary file.
-    Raises:
-        OSError: If the platform is unsupported or the binary is missing.
-    """
-    system = platform.system().lower()
-    binary_name = PLATFORM_MAP.get(system)
-    if not binary_name:
-        raise OSError(f"Unsupported platform: {system}")
-    
-    binary_path = BINARY_DIR / binary_name
-    if not binary_path.is_file():
-        raise FileNotFoundError(f"Anon binary not found: {binary_path}")
-    
-    return binary_path
 
-def get_anonrc_path(custom_anonrc=None):
+class AnonRunner:
     """
-    Get the path to the anonrc configuration file.
-    Args:
-        custom_anonrc (Path, optional): Path to a custom anonrc file.
-    Returns:
-        Path: Path to the anonrc file to use.
+    Manages the lifecycle of the Anon binary.
     """
-    return custom_anonrc if custom_anonrc else DEFAULT_ANONRC
 
-def start_anon(custom_anonrc=None):
-    """
-    Start the Anon process with the specified anonrc file.
-    Args:
-        custom_anonrc (Path, optional): Path to a custom anonrc file.
-    Returns:
-        int: The process ID of the started Anon process.
-    """
-    binary_path = get_binary_path()
-    anonrc_path = get_anonrc_path(custom_anonrc)
-    
-    if not anonrc_path.is_file():
-        raise FileNotFoundError(f"anonrc file not found: {anonrc_path}")
-    
-    process = subprocess.Popen([str(binary_path), "-f", str(anonrc_path)])
-    print(f"Anon started with PID: {process.pid}, using anonrc: {anonrc_path}")
-    return process.pid
+    def __init__(self, config: AnonConfig = None):
+        """
+        Initialize the runner with the given configuration.
+        If no configuration is provided, a default configuration is used.
+        """
+        self.config = self.config = config or AnonConfig()
+        self.config_path = None
+        self.process = None
+        self.log_thread = None
 
-def stop_anon(pid):
-    """
-    Stop the Anon process by its PID.
-    Args:
-        pid (int): Process ID of the Anon process to stop.
-    """
-    try:
-        subprocess.check_call(["kill", "-9", str(pid)])
-        print(f"Anon process with PID {pid} stopped.")
-    except Exception as e:
-        print(f"Failed to stop process {pid}: {e}")
+    def log_stream(self):
+        """
+        Stream logs from the process in a separate thread.
+        """
+        assert self.process is not None, "Process must be running to stream logs"
+        for line in self.process.stdout:
+            print(line.decode().strip())    
 
-def create_default_anonrc():
-    """
-    Create a default anonrc file if it doesn't exist.
-    """
-    if not DEFAULT_ANONRC.is_file():
-        DEFAULT_ANONRC.parent.mkdir(parents=True, exist_ok=True)
-        with open(DEFAULT_ANONRC, "w") as f:
-            f.write("# Default anonrc for Anon\n")
-            f.write("SocksPort 9050\n")
-            f.write("ControlPort 9051\n")
-        print(f"Default anonrc created at {DEFAULT_ANONRC}")
+    def get_binary_path(self) -> Path:
+        """
+        Determine the path to the Anon binary based on the platform.
+        """
+        system = platform.system().lower()
+        binary_name = PLATFORM_MAP.get(system)
+
+        if not binary_name:
+            raise OSError(f"Unsupported platform: {system}")
+
+        binary_path = self.config.binary_path or (BINARY_DIR / binary_name)
+        if not binary_path.exists():
+            raise FileNotFoundError(f"Anon binary not found at: {binary_path}")
+        
+        return binary_path
+
+    def start(self):
+        """
+        Start the Anon binary using the provided configuration.
+        """
+        # Generate configuration file
+        self.config_path = create_anon_config_file(self.config)
+
+        # Command to run Anon
+        binary_path = self.get_binary_path()
+        command = [str(binary_path), "-f", str(self.config_path)]
+
+        # Start the process
+        try:
+            if self.config.display_log:
+                # Redirect stdout and stderr to the console
+                self.process = subprocess.Popen(
+                    command,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                )
+                print(f"Anon started with PID: {self.process.pid}")
+
+                self.log_thread = threading.Thread(target=self.log_stream, daemon=True)
+                self.log_thread.start()
+            else:
+                # Suppress logs
+                self.process = subprocess.Popen(
+                    command,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+                print(f"Anon started with PID: {self.process.pid}")
+
+        except FileNotFoundError:
+            print(f"Error: Anon binary not found at {binary_path}")
+            raise
+        except Exception as e:
+            print(f"Failed to start Anon: {e}")
+            raise
+
+    def stop(self):
+        if self.process and self.process.poll() is None:
+            print(f"Stopping Anon process with PID: {self.process.pid}")
+            self.process.terminate()
+            try:
+                self.process.wait(timeout=5)
+                print(f"Anon process with PID {self.process.pid} terminated gracefully.")
+            except subprocess.TimeoutExpired:
+                print(f"Anon process with PID {self.process.pid} did not stop. Killing it...")
+                self.process.kill()
+                self.process.wait()
+                print(f"Anon process with PID {self.process.pid} killed.")
+        else:
+            print("Anon process is not running.")
 

@@ -1,24 +1,15 @@
 """
 Anon Python SDK
 
-This package provides tools to interact with the Anon network, including:
-- Managing the Anon process (start/stop).
-- Configuring and managing circuits.
-- Fetching relay information and more.
-
-Quick Start:
-    from anon_python_sdk import start_anon, stop_anon
-
-    # Start the Anon process
-    pid = start_anon()
-
-    # Stop the Anon process
-    stop_anon(pid)
+This package provides a Python interface for the Anon network.
 """
 
 # Import key functions and classes for top-level access
-from .anon_runner import start_anon, stop_anon, create_default_anonrc
+from .anon_runner import AnonRunner
+from .anon_config import AnonConfig, create_anon_config_file
 from .control_client import ControlClient
+from .socks_client import SocksClient
 from .exceptions import AnonError
+from .models import Circuit, Relay
 
-__all__ = ["ControlClient", "Circuit", "Relay", "AnonError"]
+__all__ = [AnonRunner, AnonConfig, create_anon_config_file, ControlClient, SocksClient, AnonError, Circuit, Relay]

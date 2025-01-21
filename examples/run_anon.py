@@ -1,12 +1,20 @@
-from anon_python_sdk import start_anon, stop_anon, create_default_anonrc
+from anon_python_sdk import AnonRunner, AnonConfig
+import time
 
-# Create a default anonrc file if it doesn't exist
-create_default_anonrc()
+# Create a configuration
+config = AnonConfig(
+    auto_terms_agreement=True
+)
 
-# Start the Anon process
-pid = start_anon()
-print(f"Anon started with PID: {pid}")
+# Initialize and start the runner
+runner = AnonRunner(config)
 
-# Stop the Anon process
-stop_anon(pid)
-print(f"Anon process with PID {pid} stopped.")
+try:
+    runner.start()
+    print("Anon is running...")
+    time.sleep(5)  # Wait for Anon to start
+    # Perform tasks
+finally:
+    runner.stop()
+    print("Anon has stopped.")
+    exit(0)
