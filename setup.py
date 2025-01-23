@@ -23,6 +23,7 @@ ARCH_MAP = {
     "arm64": "arm64",
     "aarch64": "arm64",
     "x86_64": "amd64",
+    "amd64": "amd64",
 }
 
 class CustomInstallCommand(install):
@@ -46,7 +47,8 @@ class CustomInstallCommand(install):
         platform_name = PLATFORM_MAP[system]
         arch_name = ARCH_MAP[arch]
 
-        asset_name = f"anon-live-{platform_name}-{arch_name}.zip"
+        signed = "-signed" if system == "windows" else ""
+        asset_name = f"anon-live-{platform_name}{signed}-{arch_name}.zip"
         binary_dir = Path.home() / ".anon_python_sdk" / "bin"
         binary_dir.mkdir(parents=True, exist_ok=True)
 
@@ -87,7 +89,7 @@ class CustomInstallCommand(install):
 # Standard setup.py configuration
 setup(
     name="anon_python_sdk",
-    version="0.0.8",
+    version="0.0.10",
     description="Python SDK for Anon",
     packages=find_packages(),
     package_data={"anon_python_sdk": ["bin/*"]},
