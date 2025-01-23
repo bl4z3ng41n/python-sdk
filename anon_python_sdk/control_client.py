@@ -1,6 +1,6 @@
 from stem.control import Controller
 from .exceptions import AnonError
-from .models import Circuit, Relay
+from .models import Circuit, Relay, RelayInfo
 from typing import List, Optional
 
 
@@ -126,3 +126,52 @@ class ControlClient:
             self.controller.close_circuit(circuit_id)
         except Exception as e:
             raise AnonError(f"Error closing circuit {circuit_id}: {e}")
+
+    def get_relay_info(self, fingerprint: str) -> RelayInfo:
+        """
+        Get relay information by fingerprint.
+
+        Args:
+            fingerprint (str): The relay fingerprint.
+
+        Returns:
+            RelayInfo: Relay information as a structured object.
+        """
+        if not self.controller:
+            raise AnonError("Control client is not connected. Call 'connect()' first.")
+
+        try:
+            # Send the GETINFO command to retrieve relay info
+            response = self.controller.get_info(f"ns/id/${fingerprint}")
+        except Exception as e:
+            raise AnonError(f"Failed to fetch relay info for {fingerprint}: {e}")
+
+        # Parse the response
+        lines = response.splitlines()
+        nickname, ip, or_port, flags, bandwidth = "", "", 0, [], 0
+
+        for line in lines:
+            line = line.strip()
+
+            if line.startswith("s "):  # Flags
+                flags = line[2:].strip().split(" ")
+
+            elif line.startswith("r "):  # IP, ORPort, Nickname
+                parts = line.split(" ")
+                if len(parts) >= 8:
+                    nickname = parts[1]
+                    ip = parts[6]
+                    or_port = int(parts[7])
+
+            elif line.startswith("w "):  # Bandwidth
+                bandwidth = int(line.split("=")[1])
+
+        return RelayInfo(
+            fingerprint=fingerprint,
+            nickname=nickname,
+            ip=ip,
+            or_port=or_port,
+            flags=flags,
+            bandwidth=bandwidth,
+        )
+    

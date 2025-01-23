@@ -14,3 +14,12 @@ class Circuit:
     path: List[Relay]
     purpose: Optional[str] = None
     time_created: Optional[datetime] = None
+
+@dataclass
+class RelayInfo:
+    fingerprint: str
+    nickname: str
+    ip: str
+    or_port: int
+    flags: List[str]
+    bandwidth: int

@@ -10,6 +10,6 @@ from .anon_config import AnonConfig, create_anon_config_file
 from .control_client import ControlClient
 from .socks_client import SocksClient
 from .exceptions import AnonError
-from .models import Circuit, Relay
+from .models import Circuit, Relay, RelayInfo
 
-__all__ = [AnonRunner, AnonConfig, create_anon_config_file, ControlClient, SocksClient, AnonError, Circuit, Relay]
+__all__ = [AnonRunner, AnonConfig, create_anon_config_file, ControlClient, SocksClient, AnonError, Circuit, Relay, RelayInfo]
