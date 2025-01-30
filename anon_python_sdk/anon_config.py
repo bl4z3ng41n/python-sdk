@@ -3,18 +3,22 @@ import tempfile
 from pathlib import Path
 from typing import Optional
 from datetime import datetime
+from colorama import Fore, Style, init
 
+# Initialize colorama for colored output
+init(autoreset=True)
 
 class AnonConfig:
     """
     Configuration object for the Anon binary.
     """
+
     def __init__(
             self,
             display_log: Optional[bool] = True,
             use_exec_file: Optional[bool] = False,
             socks_port: int = 9050,
-            or_port: int = 0, # Disable by default
+            or_port: int = 0,  # Disable by default
             control_port: int = 9051,
             config_file: Optional[str] = None,
             binary_path: Optional[str] = None,
@@ -50,10 +54,11 @@ def ask_for_agreement() -> bool:
     Prompt the user for agreement to terms.
     """
     try:
-        agreement = input("Do you agree to the terms? (Press Enter or 'y' to agree, or Ctrl+C to exit): ")
-        return agreement.strip().lower() in {"y", ""}
+        print(f"{Fore.BLUE}Do you agree to the terms? (Press Enter or 'y' to agree, or Ctrl+C to exit): ", end="")
+        agreement = input().strip().lower()
+        return agreement in {"y", ""}
     except KeyboardInterrupt:
-        print("\nAgreement declined. Exiting...")
+        print(f"\n{Fore.RED}Agreement declined. Exiting...")
         exit(1)
 
 
@@ -67,13 +72,13 @@ def check_terms_agreement(file_path: Path) -> bool:
                 content = f.read().strip()
                 return content == "agreed"
         except Exception as e:
-            print(f"Error reading terms agreement file: {e}")
+            print(f"{Fore.RED}Error reading terms agreement file: {e}")
     return False
 
 
 def create_anon_config_file(options: AnonConfig) -> str:
     """
-    Creates an anon configuration file and returns its path.
+    Creates an Anon configuration file and returns its path.
     If a config file is provided and exists, it will be reused.
     """
 
@@ -81,6 +86,7 @@ def create_anon_config_file(options: AnonConfig) -> str:
     if options.config_file:
         config_path = Path(options.config_file)
         if config_path.exists():
+            print(f"{Fore.GREEN}Using existing Anon config: {config_path}")
             return str(config_path)
 
     # Create a subdirectory in the temp directory for Anon
@@ -103,9 +109,6 @@ def create_anon_config_file(options: AnonConfig) -> str:
         f"ControlPort {options.control_port}",
     ]
 
-    # Create data directory
-    temp_data_dir_path.mkdir(parents=True, exist_ok=True)
-
     # Handle automatic terms agreement
     if options.auto_terms_agreement:
         config_items.append("AgreeToTerms 1")
@@ -113,14 +116,18 @@ def create_anon_config_file(options: AnonConfig) -> str:
         terms_agreement_file = Path(os.getcwd()) / "terms-agreement"
         if not check_terms_agreement(terms_agreement_file):
             if ask_for_agreement():
+                print(f"{Fore.GREEN}Terms agreement accepted.")
                 terms_agreement_file.write_text("agreed")
             else:
-                print("Agreement declined. Exiting...")
+                print(f"{Fore.RED}Agreement declined. Exiting...")
                 exit(1)
 
     # Write to configuration file inside the data directory
-    with open(config_path, "w") as f:
-        f.write("\n".join(config_items) + "\n")            
+    try:
+        with open(config_path, "w") as f:
+            f.write("\n".join(config_items) + "\n")
+    except Exception as e:
+        print(f"{Fore.RED}Failed to create config file: {e}")
+        raise
 
     return config_path
-

@@ -1,5 +1,4 @@
 from anon_python_sdk import SocksClient, AnonConfig, AnonRunner
-import time
 
 
 # Create a configuration
@@ -10,8 +9,6 @@ config = AnonConfig(
 # Initialize and start the runner
 runner = AnonRunner(config)
 runner.start()
-
-time.sleep(5)  # Wait for Anon to start
 
 client = SocksClient()
 

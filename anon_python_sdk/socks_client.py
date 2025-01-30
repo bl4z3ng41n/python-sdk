@@ -1,6 +1,9 @@
 import requests
 from requests.exceptions import RequestException
+from colorama import Fore, Style, init
 
+# Initialize colorama for colored output
+init(autoreset=True)
 
 class SocksClient:
     """
@@ -113,9 +116,31 @@ class SocksClient:
             Response: The HTTP response object.
         """
         try:
+            print(f"{Fore.BLUE}Sending {method.upper()} request to {url}")
+
             request_method = getattr(requests, method)
             response = request_method(url, proxies=self.proxies, **kwargs)
+
+            # If request is successful
             response.raise_for_status()
+            print(f"{Fore.GREEN}Request successful: {response.status_code} - {response.reason}")
+
             return response
+
+        except requests.HTTPError as e:
+            print(f"{Fore.YELLOW}HTTP Error {e.response.status_code}: {e.response.reason}")
+            raise RuntimeError(f"HTTP Error {e.response.status_code}: {e.response.reason}")
+
+        except requests.Timeout:
+            print(f"{Fore.YELLOW}Request timed out: {url}")
+            raise RuntimeError(f"Request timed out: {url}")
+
+        except requests.ConnectionError:
+            print(f"{Fore.RED}Connection error while making {method.upper()} request to {url}")
+            raise RuntimeError(f"Connection error while making {method.upper()} request to {url}")
+
         except RequestException as e:
+            print(f"{Fore.RED}Error making {method.upper()} request: {e}")
             raise RuntimeError(f"Error making {method.upper()} request through Anon: {e}")
+        
+    

@@ -69,7 +69,6 @@ runner = AnonRunner(config)
 try:
     # Start Anon
     runner.start()
-    time.sleep(5)  # Wait for Anon to start
     # Perform tasks
 finally:
     runner.stop()

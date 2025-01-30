@@ -11,8 +11,6 @@ config = AnonConfig(
 runner = AnonRunner(config)
 runner.start()
 
-time.sleep(5)  # Wait for Anon to start
-
 client = ControlClient()
 
 try:
