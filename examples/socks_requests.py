@@ -3,7 +3,9 @@ from anon_python_sdk import SocksClient, AnonConfig, AnonRunner
 
 # Create a configuration
 config = AnonConfig(
-    auto_terms_agreement=True
+    auto_terms_agreement=True,
+    display_log=False,
+    exit_countries=["DE"],
 )
 
 # Initialize and start the runner

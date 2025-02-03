@@ -1,7 +1,7 @@
 import os
 import tempfile
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from colorama import Fore, Style, init
 
@@ -23,6 +23,7 @@ class AnonConfig:
             config_file: Optional[str] = None,
             binary_path: Optional[str] = None,
             auto_terms_agreement: Optional[bool] = False,
+            exit_countries: Optional[List[str]] = None,
     ):
         self.display_log = display_log
         self.use_exec_file = use_exec_file
@@ -32,6 +33,7 @@ class AnonConfig:
         self.config_file = config_file
         self.binary_path = binary_path
         self.auto_terms_agreement = auto_terms_agreement
+        self.exit_countries = exit_countries
 
     def to_dict(self):
         """
@@ -46,6 +48,7 @@ class AnonConfig:
             "config_file": self.config_file,
             "binary_path": self.binary_path,
             "auto_terms_agreement": self.auto_terms_agreement,
+            "exit_countries": self.exit_countries,
         }
 
 
@@ -108,6 +111,12 @@ def create_anon_config_file(options: AnonConfig) -> str:
         f"ORPort {options.or_port}",
         f"ControlPort {options.control_port}",
     ]
+
+    # Handle exit nodes if specified
+    if options.exit_countries:
+        exit_nodes = ",".join(f"{{{country.upper()}}}" for country in options.exit_countries)
+        config_items.append(f"ExitNodes {exit_nodes}")
+        print(f"{Fore.CYAN}Using Exit Nodes: {exit_nodes}")
 
     # Handle automatic terms agreement
     if options.auto_terms_agreement:
