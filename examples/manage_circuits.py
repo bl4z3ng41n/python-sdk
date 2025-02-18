@@ -1,34 +1,32 @@
-from anon_python_sdk import ControlClient, AnonRunner, AnonConfig
-import time
+from anon_python_sdk import Control, Process, Config
 
 print("Starting Anon...")
 # Create a configuration
-config = AnonConfig(
-    auto_terms_agreement=True
+config = Config(
+    auto_terms_agreement=True,
+    display_log=False
 )
 
 # Initialize and start the runner
-runner = AnonRunner(config)
-runner.start()
+anon = Process.launch_anon(anonrc_path=config.to_file())
 
-client = ControlClient()
+client = Control.from_port()
 
 try:
     print("Connecting to Control Port...")
-    client.connect()
+    client.authenticate()
 
     print("Creating a new circuit through specified relays...")
     # relays = [
-    #     "894D4088C63D3FA4446E505E672C47A8247AC891", 
-    #     "6DB2B0D574CE216648CA388D309EE7CF5DF0B423", 
+    #     "894D4088C63D3FA4446E505E672C47A8247AC891",
+    #     "6DB2B0D574CE216648CA388D309EE7CF5DF0B423",
     #     "A17C391AAE45689358EC226C43D1290EBED7437A"
     #     ]# Replace with real relay fingerprints
-    m_circuit_id = client.create_circuit()
+    m_circuit_id = client.new_circuit(await_build=True)
     print(f"New circuit created with ID: {m_circuit_id}")
 
-    time.sleep(5)  # Wait for the circuit to be established
     m_circuit = client.get_circuit(m_circuit_id)
-    print(f"Manual Circuit ID: {m_circuit.id}, Status: {m_circuit.status}, Path: {m_circuit.path}")
+    print(f"Manual Circuit ID: {m_circuit.id}, Path: {m_circuit.path}")
 
     print("Closing the manual circuit...")
     client.close_circuit(m_circuit_id)
@@ -36,7 +34,7 @@ try:
 
 finally:
     client.close()
-    print("ControlClient connection closed.")
+    print("Controller connection closed.")
 
     print("Stopping Anon...")
-    runner.stop()
+    anon.stop()

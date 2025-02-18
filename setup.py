@@ -26,8 +26,10 @@ ARCH_MAP = {
     "amd64": "amd64",
 }
 
+
 class CustomInstallCommand(install):
     """Custom installation command to download and install the Anon binary."""
+
     def run(self):
         # Run the standard install process
         install.run(self)
@@ -39,7 +41,7 @@ class CustomInstallCommand(install):
         if system not in PLATFORM_MAP:
             print(f"Unsupported platform: {system}")
             raise OSError("Unsupported platform")
-        
+
         if arch not in ARCH_MAP:
             print(f"Unsupported architecture: {arch}")
             raise OSError("Unsupported architecture")
@@ -58,12 +60,14 @@ class CustomInstallCommand(install):
         response.raise_for_status()
         assets = response.json().get("assets", [])
         download_url = next(
-            (asset["browser_download_url"] for asset in assets if asset["name"] == asset_name),
+            (asset["browser_download_url"]
+             for asset in assets if asset["name"] == asset_name),
             None,
         )
 
         if not download_url:
-            print(f"Binary for platform {platform_name} and architecture {arch_name} is not available.")
+            print(
+                f"Binary for platform {platform_name} and architecture {arch_name} is not available.")
             return
 
         # Download and extract the binary
@@ -97,7 +101,6 @@ setup(
     install_requires=[
         "requests[socks]",
         "stem",
-        "colorama",
     ],
     cmdclass={
         "install": CustomInstallCommand,  # Use the custom install command

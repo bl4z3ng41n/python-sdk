@@ -1,19 +1,19 @@
-from anon_python_sdk import AnonRunner, AnonConfig
+from anon_python_sdk import Config, Process
 
 
 # Create a configuration
-config = AnonConfig(
+config = Config(
     auto_terms_agreement=True,
     display_log=True,
 )
 
-# Initialize and start the runner
-runner = AnonRunner(config)
+anon = None
 
 try:
-    runner.start(wait_for_ready=False)
+    anon = Process.launch_anon(anonrc_path=config.to_file())
     print("Anon is running...")
+except Exception as e:
+    print(f"Anon failed to start: {e}")
 finally:
-    runner.stop()
+    anon.stop()
     print("Anon has stopped.")
-    exit(0)

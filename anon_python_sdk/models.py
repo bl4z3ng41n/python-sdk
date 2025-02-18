@@ -2,24 +2,27 @@ from typing import List, Optional
 from dataclasses import dataclass
 from datetime import datetime
 
+
 @dataclass
-class Relay:
+class Hop:
     fingerprint: str
-    nickname: Optional[str] = None
+    nickname: str
+
 
 @dataclass
 class Circuit:
     id: str
-    status: str
-    path: List[Relay]
-    purpose: Optional[str] = None
-    time_created: Optional[datetime] = None
+    path: List[Hop]
+    created: Optional[datetime] = None
+    # other fields are omitted for now
+
 
 @dataclass
-class RelayInfo:
+class Relay:
     fingerprint: str
     nickname: str
-    ip: str
+    address: str
     or_port: int
     flags: List[str]
     bandwidth: int
+    # other fields are omitted for now
