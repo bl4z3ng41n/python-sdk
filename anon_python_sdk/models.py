@@ -26,3 +26,9 @@ class Relay:
     flags: List[str]
     bandwidth: int
     # other fields are omitted for now
+
+@dataclass
+class Stream:
+    id: str
+    target: str
+    # other fields are omitted for now

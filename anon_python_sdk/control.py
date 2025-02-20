@@ -1,12 +1,16 @@
 from __future__ import annotations
 
-from typing import List, Optional, Sequence, Tuple, Union
+from typing import List, Optional, Sequence, Tuple, Union, Mapping, Callable, Awaitable
 
 import stem.control
 from stem.descriptor.router_status_entry import RouterStatusEntryV3
-from stem.response.events import CircuitEvent
+from stem.response.events import CircuitEvent, StreamEvent
 
-from .models import Circuit, Hop, Relay
+# temp
+from stem.response.events import Event
+from stem.control import EventType
+
+from .models import Circuit, Hop, Relay, Stream
 
 
 class Control():
@@ -51,8 +55,44 @@ class Control():
             relay)
         return self._to_relay(router_status)
 
-    def get_country(self, address: Optional[str] = None) -> str:
-        return self._controller.get_info(f'ip-to-country/{address}')
+    def get_network_statuses(self, relays: Optional[Sequence[str]] = None) -> List[Relay]:
+        router_statuses: List[RouterStatusEntryV3] = self._controller.get_network_statuses(
+            relays)
+        return self._to_relays(router_statuses)
+
+    def get_streams(self) -> List[Stream]:
+        stream_events: List[StreamEvent] = self._controller.get_streams()
+        streams = self._to_streams(stream_events)
+        return streams
+
+    def get_stream(self, stream_id: int) -> Optional[Stream]:
+        streams = self.get_streams()
+        for stream in streams:
+            if stream.id == stream_id:
+                return stream
+        return None
+
+    def attach_stream(self, stream_id, circuit_id, exiting_hop=None):
+        self._controller.attach_stream(stream_id, circuit_id, exiting_hop)
+
+    # type: ignore
+    def add_event_listener(self, listener: Callable[[Event], Union[None, Awaitable[None]]]) -> None:
+        self._controller.add_event_listener(listener, EventType.STREAM)
+
+    def remove_event_listener(self, listener: Callable[[Event], Union[None, Awaitable[None]]]) -> None:
+        self._controller.remove_event_listener(listener)
+
+    def set_conf(self, param: str, value: Union[str, Sequence[str]]) -> None:
+        self.set_options({param: value}, False)
+
+    def reset_conf(self, params: str):
+        self.set_options(Mapping([(entry, None) for entry in params]), True)
+
+    def set_options(self, params: Union[Mapping[str, Union[str, Sequence[str]]], Sequence[Tuple[str, Union[str, Sequence[str]]]]], reset: bool = False) -> None:
+        self._controller.set_options(params, reset)
+
+    def get_info(self, params: Union[str, Sequence[str]]) -> Union[str, Mapping[str]]:
+        return self._controller.get_info(params)
 
     def _to_circuits(self, circuit_events: List[CircuitEvent]) -> List[Circuit]:
         return [self._to_circuit(circuit_event) for circuit_event in circuit_events]
@@ -70,6 +110,9 @@ class Control():
             nickname=hop[1],
         )
 
+    def _to_relays(self, router_statuses: List[RouterStatusEntryV3]) -> List[Relay]:
+        return [self._to_relay(router_status) for router_status in router_statuses]
+
     def _to_relay(self, router_status: RouterStatusEntryV3) -> Relay:
         return Relay(
             fingerprint=router_status.fingerprint,
@@ -79,3 +122,40 @@ class Control():
             flags=router_status.flags,
             bandwidth=router_status.bandwidth,
         )
+
+    def _to_streams(self, stream_events: List[StreamEvent]) -> List[Stream]:
+        return [self._to_stream(stream_event) for stream_event in stream_events]
+
+    def _to_stream(self, stream_event: StreamEvent) -> Stream:
+        return Stream(
+            id=stream_event.id,
+            target=stream_event.target,
+        )
+
+    # useful methods
+
+    def get_country(self, address: str) -> str:
+        return self.get_info(f'ip-to-country/{address}')
+
+    def disable_stream_attachment(self):
+        self.set_conf('__LeaveStreamsUnattached', '1')
+
+    def enable_stream_attachment(self):
+        self.reset_conf('__LeaveStreamsUnattached')
+
+    def get_relays(self) -> List[Relay]:
+        return self.get_network_statuses()
+
+    def get_relays_by_flags(self, flags: Union[str, Sequence[str]]) -> List[Relay]:
+        relays = self.get_relays()
+        return self.filter_relays_by_flags(relays, flags)
+
+    def filter_relays_by_flags(self, relays: List[Relay], *flags: str) -> List[Relay]:
+        return [relay for relay in relays if all(flag in relay.flags for flag in flags)]
+
+    def get_relays_by_countries(self, countries: Union[str, Sequence[str]]) -> List[Relay]:
+        relays = self.get_relays()
+        return self.filter_relays_by_countries(relays, countries)
+
+    def filter_relays_by_countries(self, relays: List[Relay], *countries: str) -> List[Relay]:
+        return [relay for relay in relays if all(country in self.get_country(relay.address) for country in countries)]
