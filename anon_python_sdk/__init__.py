@@ -11,5 +11,7 @@ from .socks import Socks
 from .exceptions import AnonError
 from .models import Circuit, Hop, Relay
 from .process import Process
+from .starter import Anon
 
-__all__ = [Config, Control, Process, Socks, AnonError, Circuit, Hop, Relay]
+__all__ = [Config, Control, Process, Socks,
+           AnonError, Circuit, Hop, Relay, Anon]
