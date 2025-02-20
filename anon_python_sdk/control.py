@@ -77,7 +77,8 @@ class Control():
 
     # type: ignore
     def add_event_listener(self, listener: Callable[[Event], Union[None, Awaitable[None]]]) -> None:
-        self._controller.add_event_listener(listener, EventType.STREAM)
+        self._controller.add_event_listener(
+            listener, EventType.STREAM)  # todo - fix
 
     def remove_event_listener(self, listener: Callable[[Event], Union[None, Awaitable[None]]]) -> None:
         self._controller.remove_event_listener(listener)
@@ -159,3 +160,29 @@ class Control():
 
     def filter_relays_by_countries(self, relays: List[Relay], *countries: str) -> List[Relay]:
         return [relay for relay in relays if all(country in self.get_country(relay.address) for country in countries)]
+
+    # templates
+
+    def get_circuits_with_relay_info_and_country(self):
+        circuits = self.get_circuits()
+        result = []
+        for circuit in circuits:
+            relays = []
+            for hop in circuit.path:
+                relay = self.get_network_status(hop.fingerprint)
+                country = self.get_country(relay.address)
+                relays.append({
+                    'fingerprint': relay.fingerprint,
+                    'nickname': relay.nickname,
+                    'address': relay.address,
+                    'country': country,
+                    'or_port': relay.or_port,
+                    'flags': relay.flags,
+                    'bandwidth': relay.bandwidth,
+                })
+            result.append({
+                'id': circuit.id,
+                'created': circuit.created,
+                'relays': relays
+            })
+        return result
