@@ -35,6 +35,7 @@ class CircuitPurpose(Enum):
     PATH_BIAS_TESTING = 'PATH_BIAS_TESTING'
     CIRCUIT_PADDING = 'CIRCUIT_PADDING'
     CONFLUX_UNLINKED = 'CONFLUX_UNLINKED'  # TODO: check if this is correct
+    CONFLUX_LINKED = 'CONFLUX_LINKED'  # TODO: check if this is correct
 
     def __str__(self):
         return self.name
@@ -61,8 +62,36 @@ class Relay:
     # other fields are omitted for now
 
 
+class StreamStatus(Enum):
+    NEW = 'NEW'
+    NEWRESOLVE = 'NEWRESOLVE'
+    REMAP = 'REMAP'
+    SENTCONNECT = 'SENTCONNECT'
+    SENTRESOLVE = 'SENTRESOLVE'
+    SUCCEEDED = 'SUCCEEDED'
+    FAILED = 'FAILED'
+    DETACHED = 'DETACHED'
+    CLOSED = 'CLOSED'
+
+    def __str__(self):
+        return self.name
+
+
+class StreamPurpose(Enum):
+    DIR_FETCH = 'DIR_FETCH'
+    DIR_UPLOAD = 'DIR_UPLOAD'
+    DNS_REQUEST = 'DNS_REQUEST'
+    DIRPORT_TEST = 'DIRPORT_TEST'
+    USER = 'USER'
+
+    def __str__(self):
+        return self.name
+
+
 @dataclass
 class Stream:
     id: str
     target: str
+    status: StreamStatus
+    purpose: Optional[StreamPurpose]
     # other fields are omitted for now

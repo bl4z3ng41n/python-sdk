@@ -1,4 +1,4 @@
-from anon_python_sdk import Control, Process, Config, Socks
+from anon_python_sdk import Control, Process, Config, Socks, StreamStatus
 
 
 class Anon():
@@ -27,7 +27,8 @@ class Anon():
         self.control.disable_stream_attachment()
 
         def attach_stream(stream):
-            if stream.status == 'NEW':
+            print(f"Stream status: {stream.status}. Purpose: {stream.purpose}")
+            if stream.status == StreamStatus.NEW.name:
                 self.control.attach_stream(stream.id, circuit_id)
 
         self.stream_listener = attach_stream
