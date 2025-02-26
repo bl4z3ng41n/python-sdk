@@ -9,9 +9,9 @@ from .config import Config
 from .control import Control
 from .socks import Socks
 from .exceptions import AnonError
-from .models import Circuit, Hop, Relay
+from .models import Circuit, Hop, Relay, CircuitStatus
 from .process import Process
 from .starter import Anon
 
-__all__ = [Config, Control, Process, Socks,
+__all__ = [Config, Control, Process, Socks, CircuitStatus,
            AnonError, Circuit, Hop, Relay, Anon]

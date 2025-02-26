@@ -1,4 +1,5 @@
 from typing import List, Optional
+from enum import Enum
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -9,11 +10,24 @@ class Hop:
     nickname: str
 
 
+class CircuitStatus(Enum):
+    LAUNCHED = 'LAUNCHED'
+    BUILT = 'BUILT'
+    GUARD_WAIT = 'GUARD_WAIT'
+    EXTENDED = 'EXTENDED'
+    FAILED = 'FAILED'
+    CLOSED = 'CLOSED'
+
+    def __str__(self):
+        return self.name
+
+
 @dataclass
 class Circuit:
     id: str
     path: List[Hop]
-    created: Optional[datetime] = None
+    created: datetime
+    status: CircuitStatus
     # other fields are omitted for now
 
 
@@ -26,6 +40,7 @@ class Relay:
     flags: List[str]
     bandwidth: int
     # other fields are omitted for now
+
 
 @dataclass
 class Stream:

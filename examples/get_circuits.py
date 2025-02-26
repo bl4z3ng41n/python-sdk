@@ -16,6 +16,7 @@ try:
     for circuit in circuits:
         print(f"Circuit ID: {circuit['id']}")
         print(f"  Time Created: {circuit['created']}")
+        print(f"  Status: {circuit['status']}")
         print("  Path:")
         for relay in circuit['relays']:
             print(f"    Fingerprint: {relay['fingerprint']}")
