@@ -22,12 +22,31 @@ class CircuitStatus(Enum):
         return self.name
 
 
+class CircuitPurpose(Enum):
+    GENERAL = 'GENERAL'
+    HS_CLIENT_INTRO = 'HS_CLIENT_INTRO'
+    HS_CLIENT_REND = 'HS_CLIENT_REND'
+    HS_SERVICE_INTRO = 'HS_SERVICE_INTRO'
+    HS_SERVICE_REND = 'HS_SERVICE_REND'
+    TESTING = 'TESTING'
+    CONTROLLER = 'CONTROLLER'
+    MEASURE_TIMEOUT = 'MEASURE_TIMEOUT'
+    HS_VANGUARDS = 'HS_VANGUARDS'
+    PATH_BIAS_TESTING = 'PATH_BIAS_TESTING'
+    CIRCUIT_PADDING = 'CIRCUIT_PADDING'
+    CONFLUX_UNLINKED = 'CONFLUX_UNLINKED'  # TODO: check if this is correct
+
+    def __str__(self):
+        return self.name
+
+
 @dataclass
 class Circuit:
     id: str
     path: List[Hop]
     created: datetime
     status: CircuitStatus
+    purpose: CircuitPurpose
     # other fields are omitted for now
 
 

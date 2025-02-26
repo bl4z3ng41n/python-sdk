@@ -10,7 +10,7 @@ from stem.response.events import CircuitEvent, StreamEvent
 from stem.response.events import Event
 from stem.control import EventType
 
-from .models import Circuit, Hop, Relay, Stream, CircuitStatus
+from .models import Circuit, Hop, Relay, Stream, CircuitStatus, CircuitPurpose
 
 
 class Control():
@@ -104,6 +104,7 @@ class Control():
             path=[self._to_hop(hop) for hop in circuit_event.path],
             created=circuit_event.created,
             status=CircuitStatus[circuit_event.status],
+            purpose=CircuitPurpose[circuit_event.purpose],
         )
 
     def _to_hop(self, hop: Tuple[str, str]) -> Hop:
@@ -185,6 +186,7 @@ class Control():
                 'id': circuit.id,
                 'created': circuit.created,
                 'status': circuit.status,
+                'purpose': circuit.purpose,
                 'relays': relays
             })
         return result
