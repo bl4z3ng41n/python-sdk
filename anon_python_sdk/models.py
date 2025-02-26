@@ -95,3 +95,14 @@ class Stream:
     status: StreamStatus
     purpose: Optional[StreamPurpose]
     # other fields are omitted for now
+
+
+@dataclass
+class VPNRouting:
+    target_address: str
+    exit_countries: List[str]
+
+
+@dataclass
+class VPNConfig:
+    routings: List[VPNRouting]
