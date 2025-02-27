@@ -14,6 +14,7 @@ class Anon():
 
     def start_vpn(self, country: str):
         self.control.authenticate()
+        self.control.disable_predicted_circuits()
         relays = self.control.get_relays()
         nl_relays = self.control.filter_relays_by_countries(
             relays, country)

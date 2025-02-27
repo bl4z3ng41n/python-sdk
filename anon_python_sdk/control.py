@@ -146,6 +146,12 @@ class Control():
     def enable_stream_attachment(self):
         self.reset_conf('__LeaveStreamsUnattached')
 
+    def disable_predicted_circuits(self):
+        self.set_conf('__DisablePredictedCircuits', '1')
+
+    def enable_predicted_circuits(self):
+        self.reset_conf('__DisablePredictedCircuits')
+
     def get_relays(self) -> List[Relay]:
         return self.get_network_statuses()
 
