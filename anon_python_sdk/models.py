@@ -51,15 +51,51 @@ class Circuit:
     # other fields are omitted for now
 
 
+class Flag(Enum):
+    Authority = 'Authority'
+    BadExit = 'BadExit'
+    BadDirectory = 'BadDirectory'
+    Exit = 'Exit'
+    Fast = 'Fast'
+    Guard = 'Guard'
+    HSDir = 'HSDir'
+    Named = 'Named'
+    NoEdConsensus = 'NoEdConsensus'
+    Running = 'Running'
+    Stable = 'Stable'
+    StaleDesc = 'StaleDesc'
+    Unnamed = 'Unnamed'
+    Valid = 'Valid'
+    V2Dir = 'V2Dir'
+    V3Dir = 'V3Dir'
+
+    def __str__(self):
+        return self.name
+
+
 @dataclass
 class Relay:
     fingerprint: str
     nickname: str
     address: str
     or_port: int
-    flags: List[str]
-    bandwidth: int
-    # other fields are omitted for now
+    flags: List[Flag]
+    bandwidth: int  # kilobytes per second
+    dir_port: int
+    document: object
+    published: datetime
+    version_line: str
+    measured: int
+    is_unmeasured: bool  # less than 3 measurements
+    digest: Optional[str]
+    identifier: str
+    identifier_type: str
+    or_addresses: object
+    version: object
+    unrecognized_bandwidth_entries: object
+    exit_policy: object
+    protocols: object
+    microdescriptor_hashes: object
 
 
 class StreamStatus(Enum):

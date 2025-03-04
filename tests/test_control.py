@@ -1,9 +1,7 @@
 import unittest
-from unittest.mock import MagicMock, patch
-from stem.response.events import CircuitEvent, StreamEvent
-from stem.descriptor.router_status_entry import RouterStatusEntryV3
+from unittest.mock import MagicMock
 from stem.control import Controller
-from anon_python_sdk import Control, Circuit, Hop, Relay, Stream, CircuitStatus, CircuitPurpose
+from anon_python_sdk import Control
 
 
 class TestControl(unittest.TestCase):

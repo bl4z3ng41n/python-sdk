@@ -25,7 +25,7 @@ try:
             print(f"    Address: {relay['address']}")
             print(f"    Country: {relay['country']}")
             print(f"    ORPort: {relay['or_port']}")
-            print(f"    Flags: {relay['flags']}")
+            print(f"    Flags: {', '.join(f.name for f in relay['flags'])}")
             print(f"    Bandwidth: {relay['bandwidth']}")
             print()
 

@@ -1,4 +1,4 @@
-from anon_python_sdk import Control, Process, Config, Socks, StreamStatus, VPNConfig
+from anon_python_sdk import Control, Process, Config, Socks, StreamStatus, VPNConfig, Flag
 
 
 class Anon():
@@ -19,10 +19,10 @@ class Anon():
         nl_relays = self.control.filter_relays_by_countries(
             relays, country)
         exit_relays = self.control.filter_relays_by_flags(
-            nl_relays, "Exit")
+            nl_relays, Flag.Exit)
         exit = exit_relays[0].fingerprint
         guard_relays = self.control.filter_relays_by_flags(
-            nl_relays, "Guard")
+            nl_relays, Flag.Guard)
         guard = guard_relays[0].fingerprint
         path = [guard, exit]
         circuit_id = self.control.new_circuit(path=path, await_build=True)
@@ -47,10 +47,10 @@ class Anon():
             nl_relays = self.control.filter_relays_by_countries(
                 relays, *routing.exit_countries)
             exit_relays = self.control.filter_relays_by_flags(
-                nl_relays, "Exit")
+                nl_relays, Flag.Exit)
             exit = exit_relays[0].fingerprint
             guard_relays = self.control.filter_relays_by_flags(
-                nl_relays, "Guard")
+                nl_relays, Flag.Guard)
             guard = guard_relays[0].fingerprint
             path = [guard, exit]
             circuit_id = self.control.new_circuit(path=path, await_build=True)

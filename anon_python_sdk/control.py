@@ -10,7 +10,7 @@ from stem.response.events import CircuitEvent, StreamEvent
 from stem.response.events import Event
 from stem.control import EventType
 
-from .models import Circuit, Hop, Relay, Stream, CircuitStatus, CircuitPurpose
+from .models import Circuit, Hop, Relay, Stream, CircuitStatus, CircuitPurpose, Flag
 
 
 class Control():
@@ -122,8 +122,23 @@ class Control():
             nickname=router_status.nickname,
             address=router_status.address,
             or_port=router_status.or_port,
-            flags=router_status.flags,
+            flags=[Flag[flag] for flag in router_status.flags],
             bandwidth=router_status.bandwidth,
+            dir_port=router_status.dir_port,
+            published=router_status.published,
+            version_line=router_status.version_line,
+            measured=router_status.measured,
+            document=router_status.document,
+            is_unmeasured=router_status.is_unmeasured,
+            digest=router_status.digest,
+            identifier=router_status.identifier,
+            identifier_type=router_status.identifier_type,
+            or_addresses=router_status.or_addresses,
+            version=router_status.version,
+            unrecognized_bandwidth_entries=router_status.unrecognized_bandwidth_entries,
+            exit_policy=router_status.exit_policy,
+            protocols=router_status.protocols,
+            microdescriptor_hashes=router_status.microdescriptor_hashes,
         )
 
     def _to_streams(self, stream_events: List[StreamEvent]) -> List[Stream]:
@@ -159,7 +174,7 @@ class Control():
         relays = self.get_relays()
         return self.filter_relays_by_flags(relays, flags)
 
-    def filter_relays_by_flags(self, relays: List[Relay], *flags: str) -> List[Relay]:
+    def filter_relays_by_flags(self, relays: List[Relay], *flags: Flag) -> List[Relay]:
         return [relay for relay in relays if all(flag in relay.flags for flag in flags)]
 
     def get_relays_by_countries(self, countries: Union[str, Sequence[str]]) -> List[Relay]:

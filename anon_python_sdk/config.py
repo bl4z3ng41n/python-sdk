@@ -80,6 +80,7 @@ class Config:
             f"ORPort {self.or_port}",
             f"ControlPort {self.control_port}",
             f"Log notice stdout",
+            f"FetchUselessDescriptors 1",
         ]
 
         # Handle exit nodes if specified

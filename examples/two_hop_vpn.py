@@ -1,4 +1,4 @@
-from anon_python_sdk import Control, Process, Config, Socks, StreamStatus
+from anon_python_sdk import Control, Process, Config, Socks, StreamStatus, Flag
 
 print("Starting Anon...")
 # Create a configuration
@@ -20,10 +20,10 @@ try:
     relays = control.get_relays()
     print("Total Relays:", len(relays))
     nl_relays = control.filter_relays_by_countries(relays, "de")
-    exit_relays = control.filter_relays_by_flags(nl_relays, "Exit")
+    exit_relays = control.filter_relays_by_flags(nl_relays, Flag.Exit)
     exit = exit_relays[0].fingerprint
     print("Exit Relay:", exit)
-    guard_relays = control.filter_relays_by_flags(nl_relays, "Guard")
+    guard_relays = control.filter_relays_by_flags(nl_relays, Flag.Guard)
     guard = guard_relays[0].fingerprint
     print("Guard Relay:", guard)
 
