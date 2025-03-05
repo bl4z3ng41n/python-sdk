@@ -1,4 +1,4 @@
-from anon_python_sdk import Control, Process, Config, Socks, StreamStatus, VPNConfig, Flag
+from anon_python_sdk import Control, Process, Config, Socks, StreamStatus, VPNConfig, Flag, EventType
 
 
 class Anon():
@@ -33,7 +33,7 @@ class Anon():
                 self.control.attach_stream(stream.id, circuit_id)
 
         self.stream_listeners.append(attach_stream)
-        self.control.add_event_listener(attach_stream)
+        self.control.add_event_listener(attach_stream, EventType.STREAM)
 
     def start_vpn_with_config(self, config: VPNConfig):
         self.control.authenticate()
@@ -62,7 +62,7 @@ class Anon():
                     stream.id, self.routing_circuit_map[stream.target_address])
 
         self.stream_listeners.append(attach_stream)
-        self.control.add_event_listener(attach_stream)
+        self.control.add_event_listener(attach_stream, EventType.STREAM)
 
     def stop_vpn(self):
         for listener in self.stream_listeners:

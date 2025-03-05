@@ -1,4 +1,4 @@
-from anon_python_sdk import Control, Process, Config, Socks, StreamStatus, Flag
+from anon_python_sdk import Control, Process, Config, Socks, StreamStatus, Flag, EventType
 
 print("Starting Anon...")
 # Create a configuration
@@ -43,7 +43,7 @@ try:
         if stream.status == StreamStatus.NEW.name:
             control.attach_stream(stream.id, circuit_id)
 
-    control.add_event_listener(attach_stream)
+    control.add_event_listener(attach_stream, EventType.STREAM)
     print("Stream listener added.")
 
     print("Executing a new get request...")

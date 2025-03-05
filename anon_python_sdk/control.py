@@ -8,9 +8,8 @@ from stem.response.events import CircuitEvent, StreamEvent
 
 # temp
 from stem.response.events import Event
-from stem.control import EventType
 
-from .models import Circuit, Hop, Relay, Stream, CircuitStatus, CircuitPurpose, Flag
+from .models import Circuit, Hop, Relay, Stream, CircuitStatus, CircuitPurpose, Flag, EventType
 
 
 class Control():
@@ -75,10 +74,8 @@ class Control():
     def attach_stream(self, stream_id, circuit_id, exiting_hop=None):
         self._controller.attach_stream(stream_id, circuit_id, exiting_hop)
 
-    # type: ignore
-    def add_event_listener(self, listener: Callable[[Event], Union[None, Awaitable[None]]]) -> None:
-        self._controller.add_event_listener(
-            listener, EventType.STREAM)  # todo - fix
+    def add_event_listener(self, listener: Callable[[Event], Union[None, Awaitable[None]]], eventType: EventType) -> None:
+        self._controller.add_event_listener(listener, eventType.name)
 
     def remove_event_listener(self, listener: Callable[[Event], Union[None, Awaitable[None]]]) -> None:
         self._controller.remove_event_listener(listener)
@@ -94,6 +91,12 @@ class Control():
 
     def get_info(self, params: Union[str, Sequence[str]]) -> Union[str, Mapping[str]]:
         return self._controller.get_info(params)
+
+    def msg(self, message: str) -> str:
+        return self._controller.msg(message)
+
+    def resolve(self, address: str) -> str:
+        return self.msg(f"RESOLVE {address}")
 
     def _to_circuits(self, circuit_events: List[CircuitEvent]) -> List[Circuit]:
         return [self._to_circuit(circuit_event) for circuit_event in circuit_events]

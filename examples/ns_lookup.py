@@ -1,0 +1,42 @@
+from anon_python_sdk import Config, Process, Control, Socks, EventType
+import time
+
+
+# Create a configuration
+config = Config(
+    auto_terms_agreement=True,
+    display_log=True,
+)
+
+anon = Process.launch_anon(anonrc_path=config.to_file())
+print("Anon is running...")
+
+control = Control.from_port()
+socks = Socks()
+
+try:
+
+    control.authenticate()
+
+    def print_addr(event):
+        print(f"Address: {event.hostname}")
+        print(f"IP: {event.destination}")
+        print(f"Expires: {event.expiry}")
+        print(f"Error: {event.error}")
+        print(f"UTC Expiry: {event.utc_expiry}")
+        print(f"Cached: {event.cached}")
+        print(event)
+        print()
+
+    control.add_event_listener(print_addr, EventType.ADDRMAP)
+
+    control.resolve("google.com")
+    control.resolve("web3yurii.com")
+
+    time.sleep(5)
+
+except Exception as e:
+    print(f"Anon failed to start: {e}")
+finally:
+    anon.stop()
+    print("Anon has stopped.")
