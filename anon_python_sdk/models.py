@@ -134,6 +134,12 @@ class EventType(Enum):
     WARN = 'WARN'
 
 
+@dataclass
+class Event:
+    type: EventType
+    # other fields are omitted for now
+
+
 class StreamStatus(Enum):
     NEW = 'NEW'
     NEWRESOLVE = 'NEWRESOLVE'

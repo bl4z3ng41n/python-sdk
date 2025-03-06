@@ -6,10 +6,7 @@ import stem.control
 from stem.descriptor.router_status_entry import RouterStatusEntryV3
 from stem.response.events import CircuitEvent, StreamEvent
 
-# temp
-from stem.response.events import Event
-
-from .models import Circuit, Hop, Relay, Stream, CircuitStatus, CircuitPurpose, Flag, EventType
+from .models import Circuit, Hop, Relay, Stream, CircuitStatus, CircuitPurpose, Flag, EventType, Event
 
 
 class Control():
@@ -20,6 +17,7 @@ class Control():
 
     def __init__(self, controller: stem.control.Controller = None):
         self._controller = controller
+        self._listener_map = {}
 
     def authenticate(self, password=None, chroot_path=None, protocolinfo_response=None):
         self._controller.authenticate(
@@ -75,10 +73,17 @@ class Control():
         self._controller.attach_stream(stream_id, circuit_id, exiting_hop)
 
     def add_event_listener(self, listener: Callable[[Event], Union[None, Awaitable[None]]], eventType: EventType) -> None:
-        self._controller.add_event_listener(listener, eventType.name)
+
+        def _wrapped_listener(event: stem.response.events.Event):
+            if event.type == eventType.name:
+                listener(event)
+
+        self._listener_map[listener] = _wrapped_listener
+        self._controller.add_event_listener(_wrapped_listener, eventType.name)
 
     def remove_event_listener(self, listener: Callable[[Event], Union[None, Awaitable[None]]]) -> None:
-        self._controller.remove_event_listener(listener)
+        _wrapped_listener = self._listener_map.pop(listener)
+        self._controller.remove_event_listener(_wrapped_listener)
 
     def set_conf(self, param: str, value: Union[str, Sequence[str]]) -> None:
         self.set_options({param: value}, False)
