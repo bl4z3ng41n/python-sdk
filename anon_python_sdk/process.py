@@ -12,6 +12,7 @@ DEFAULT_INIT_TIMEOUT = 90
 DEFAULT_COMPLETION_PERCENT = 100
 
 
+# temporary here
 def default_init_msg_handler(line: str, display_log: bool = False):
     line = line.strip()
 
