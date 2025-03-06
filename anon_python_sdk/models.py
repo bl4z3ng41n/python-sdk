@@ -186,6 +186,19 @@ class AddrMap(Event):
 
 
 @dataclass
+class Microdescriptor:
+    onion_key: str
+    ntor_onion_key: str
+    or_addresses: List[str]
+    family: List[str]
+    exit_policy: object
+    exit_policy_v6: object
+    identifiers: object
+    protocols: object
+    digest: object
+
+
+@dataclass
 class VPNRouting:
     target_address: str
     exit_countries: List[str]

@@ -6,7 +6,7 @@ import stem.control
 from stem.descriptor.router_status_entry import RouterStatusEntryV3
 from stem.response.events import CircuitEvent, StreamEvent, AddrMapEvent
 
-from .models import Circuit, Hop, Relay, Stream, CircuitStatus, CircuitPurpose, Flag, EventType, Event, AddrMap, StreamStatus, StreamPurpose
+from .models import Circuit, Hop, Relay, Stream, CircuitStatus, CircuitPurpose, Flag, EventType, Event, AddrMap, StreamStatus, StreamPurpose, Microdescriptor
 
 
 class Control():
@@ -51,6 +51,11 @@ class Control():
         router_status: RouterStatusEntryV3 = self._controller.get_network_status(
             relay)
         return self._to_relay(router_status)
+
+    def get_microdescriptor(self, relay: str) -> Microdescriptor:
+        microdescriptor: Microdescriptor = self._controller.get_microdescriptor(
+            relay)
+        return self._to_microdescriptor(microdescriptor)
 
     def get_network_statuses(self, relays: Optional[Sequence[str]] = None) -> List[Relay]:
         router_statuses: List[RouterStatusEntryV3] = self._controller.get_network_statuses(
@@ -102,6 +107,19 @@ class Control():
 
     def resolve(self, address: str) -> str:
         return self.msg(f"RESOLVE {address}")
+
+    def _to_microdescriptor(self, microdescriptor: stem.descriptor.microdescriptor) -> Microdescriptor:
+        return Microdescriptor(
+            onion_key=microdescriptor.onion_key,
+            ntor_onion_key=microdescriptor.ntor_onion_key,
+            or_addresses=microdescriptor.or_addresses,
+            family=microdescriptor.family,
+            exit_policy=microdescriptor.exit_policy,
+            exit_policy_v6=microdescriptor.exit_policy_v6,
+            identifiers=microdescriptor.identifiers,
+            protocols=microdescriptor.protocols,
+            digest=microdescriptor.digest(),
+        )
 
     def _to_wrapped_event(self, event: stem.response.events.Event) -> Event:
         type = EventType[event.type]
