@@ -1,4 +1,4 @@
-from anon_python_sdk import Config, Process, Control, Socks, EventType
+from anon_python_sdk import Config, Process, Control, Socks, EventType, AddrMap
 import time
 
 
@@ -15,7 +15,7 @@ control = Control.from_port()
 socks = Socks()
 
 
-def print_addr(event):
+def print_addr(event: AddrMap):
     print(f"Address: {event.hostname}")
     print(f"IP: {event.destination}")
     print(f"Expires: {event.expiry}")

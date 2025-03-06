@@ -4,9 +4,9 @@ from typing import List, Optional, Sequence, Tuple, Union, Mapping, Callable, Aw
 
 import stem.control
 from stem.descriptor.router_status_entry import RouterStatusEntryV3
-from stem.response.events import CircuitEvent, StreamEvent
+from stem.response.events import CircuitEvent, StreamEvent, AddrMapEvent
 
-from .models import Circuit, Hop, Relay, Stream, CircuitStatus, CircuitPurpose, Flag, EventType, Event
+from .models import Circuit, Hop, Relay, Stream, CircuitStatus, CircuitPurpose, Flag, EventType, Event, AddrMap, StreamStatus, StreamPurpose
 
 
 class Control():
@@ -75,8 +75,8 @@ class Control():
     def add_event_listener(self, listener: Callable[[Event], Union[None, Awaitable[None]]], eventType: EventType) -> None:
 
         def _wrapped_listener(event: stem.response.events.Event):
-            if event.type == eventType.name:
-                listener(event)
+            wrapped_event = self._to_wrapped_event(event)
+            listener(wrapped_event)
 
         self._listener_map[listener] = _wrapped_listener
         self._controller.add_event_listener(_wrapped_listener, eventType.name)
@@ -102,6 +102,35 @@ class Control():
 
     def resolve(self, address: str) -> str:
         return self.msg(f"RESOLVE {address}")
+
+    def _to_wrapped_event(self, event: stem.response.events.Event) -> Event:
+        type = EventType[event.type]
+
+        match type:
+            case EventType.STREAM:
+                return Stream(
+                    type=type,
+                    id=event.id,
+                    target_address=event.target_address,
+                    status=StreamStatus[event.status],
+                    purpose=StreamPurpose[event.purpose],
+                )
+
+            case EventType.ADDRMAP:
+                return AddrMap(
+                    type=type,
+                    hostname=event.hostname,
+                    destination=event.destination,
+                    expiry=event.expiry,
+                    error=event.error,
+                    utc_expiry=event.utc_expiry,
+                    cached=event.cached,
+                )
+
+            case _:
+                return Event(
+                    type=type,
+                )
 
     def _to_circuits(self, circuit_events: List[CircuitEvent]) -> List[Circuit]:
         return [self._to_circuit(circuit_event) for circuit_event in circuit_events]

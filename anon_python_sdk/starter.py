@@ -1,4 +1,4 @@
-from anon_python_sdk import Control, Process, Config, Socks, StreamStatus, VPNConfig, Flag, EventType
+from anon_python_sdk import Control, Process, Config, Socks, StreamStatus, VPNConfig, Flag, EventType, Stream
 
 
 class Anon():
@@ -28,8 +28,8 @@ class Anon():
         circuit_id = self.control.new_circuit(path=path, await_build=True)
         self.control.disable_stream_attachment()
 
-        def attach_stream(stream):
-            if stream.status == StreamStatus.NEW.name:
+        def attach_stream(stream: Stream):
+            if stream.status == StreamStatus.NEW:
                 self.control.attach_stream(stream.id, circuit_id)
 
         self.stream_listeners.append(attach_stream)
@@ -56,8 +56,8 @@ class Anon():
             circuit_id = self.control.new_circuit(path=path, await_build=True)
             self.routing_circuit_map[routing.target_address] = circuit_id
 
-        def attach_stream(stream):
-            if stream.status == StreamStatus.NEW.name:
+        def attach_stream(stream: Stream):
+            if stream.status == StreamStatus.NEW:
                 self.control.attach_stream(
                     stream.id, self.routing_circuit_map[stream.target_address])
 

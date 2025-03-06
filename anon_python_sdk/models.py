@@ -167,12 +167,22 @@ class StreamPurpose(Enum):
 
 
 @dataclass
-class Stream:
+class Stream(Event):
     id: str
     target: str
     status: StreamStatus
     purpose: Optional[StreamPurpose]
     # other fields are omitted for now
+
+
+@dataclass
+class AddrMap(Event):
+    hostname: str
+    destination: str
+    expiry: datetime
+    error: str
+    utc_expiry: datetime
+    cached: Optional[bool]
 
 
 @dataclass

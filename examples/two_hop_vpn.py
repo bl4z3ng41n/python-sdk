@@ -1,4 +1,4 @@
-from anon_python_sdk import Control, Process, Config, Socks, StreamStatus, Flag, EventType
+from anon_python_sdk import Control, Process, Config, Socks, StreamStatus, Flag, EventType, Stream
 
 print("Starting Anon...")
 # Create a configuration
@@ -38,9 +38,9 @@ try:
     control.disable_stream_attachment()
     print("Stream attachment disabled.")
 
-    def attach_stream(stream):
+    def attach_stream(stream: Stream):
         print(f"Stream status: {stream.status}. Purpose: {stream.purpose}")
-        if stream.status == StreamStatus.NEW.name:
+        if stream.status == StreamStatus.NEW:
             control.attach_stream(stream.id, circuit_id)
 
     control.add_event_listener(attach_stream, EventType.STREAM)
