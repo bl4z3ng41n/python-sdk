@@ -149,6 +149,7 @@ class StreamStatus(Enum):
     SUCCEEDED = 'SUCCEEDED'
     FAILED = 'FAILED'
     DETACHED = 'DETACHED'
+    CONTROLLER_WAIT = 'CONTROLLER_WAIT'
     CLOSED = 'CLOSED'
 
     def __str__(self):
@@ -169,7 +170,7 @@ class StreamPurpose(Enum):
 @dataclass
 class Stream(Event):
     id: str
-    target: str
+    target_address: str
     status: StreamStatus
     purpose: Optional[StreamPurpose]
     # other fields are omitted for now

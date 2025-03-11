@@ -1,4 +1,5 @@
 from anon_python_sdk import Control, Process, Config, Socks, StreamStatus, VPNConfig, Flag, EventType, Stream
+import random
 
 
 class Anon():
@@ -20,10 +21,12 @@ class Anon():
             relays, country)
         exit_relays = self.control.filter_relays_by_flags(
             nl_relays, Flag.Exit)
-        exit = exit_relays[0].fingerprint
+        exit_relay_index = random.randint(0, len(exit_relays))
+        exit = exit_relays[exit_relay_index].fingerprint
         guard_relays = self.control.filter_relays_by_flags(
             nl_relays, Flag.Guard)
-        guard = guard_relays[0].fingerprint
+        guard_relay_index = random.randint(0, len(guard_relays))
+        guard = guard_relays[guard_relay_index].fingerprint
         path = [guard, exit]
         circuit_id = self.control.new_circuit(path=path, await_build=True)
         self.control.disable_stream_attachment()
@@ -48,10 +51,12 @@ class Anon():
                 relays, *routing.exit_countries)
             exit_relays = self.control.filter_relays_by_flags(
                 nl_relays, Flag.Exit)
-            exit = exit_relays[0].fingerprint
+            exit_relay_index = random.randint(0, len(exit_relays))
+            exit = exit_relays[exit_relay_index].fingerprint
             guard_relays = self.control.filter_relays_by_flags(
                 nl_relays, Flag.Guard)
-            guard = guard_relays[0].fingerprint
+            guard_relay_index = random.randint(0, len(guard_relays))
+            guard = guard_relays[guard_relay_index].fingerprint
             path = [guard, exit]
             circuit_id = self.control.new_circuit(path=path, await_build=True)
             self.routing_circuit_map[routing.target_address] = circuit_id

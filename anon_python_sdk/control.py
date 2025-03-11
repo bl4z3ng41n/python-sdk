@@ -78,7 +78,7 @@ class Control():
         self._controller.attach_stream(stream_id, circuit_id, exiting_hop)
 
     def add_event_listener(self, listener: Callable[[Event], Union[None, Awaitable[None]]], eventType: EventType) -> None:
-
+        
         def _wrapped_listener(event: stem.response.events.Event):
             wrapped_event = self._to_wrapped_event(event)
             listener(wrapped_event)
@@ -123,16 +123,9 @@ class Control():
 
     def _to_wrapped_event(self, event: stem.response.events.Event) -> Event:
         type = EventType[event.type]
-
         match type:
             case EventType.STREAM:
-                return Stream(
-                    type=type,
-                    id=event.id,
-                    target_address=event.target_address,
-                    status=StreamStatus[event.status],
-                    purpose=StreamPurpose[event.purpose],
-                )
+                return self._to_stream(event)
 
             case EventType.ADDRMAP:
                 return AddrMap(
@@ -201,8 +194,11 @@ class Control():
 
     def _to_stream(self, stream_event: StreamEvent) -> Stream:
         return Stream(
+            type=EventType.STREAM,
             id=stream_event.id,
-            target=stream_event.target,
+            target_address=stream_event.target_address,
+            status=StreamStatus[stream_event.status],
+            purpose=StreamPurpose[stream_event.purpose],
         )
 
     # useful methods

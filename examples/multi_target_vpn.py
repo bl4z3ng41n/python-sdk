@@ -6,7 +6,7 @@ anon = Anon()
 try:
     config = VPNConfig(
         routings=[
-            VPNRouting("ip-api.com", ["nl"]),
+            VPNRouting("ip-api.com", ["us"]),
             VPNRouting("ipinfo.io", ["de"]),
         ]
     )
