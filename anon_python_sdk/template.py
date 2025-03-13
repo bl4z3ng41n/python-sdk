@@ -1,93 +1,132 @@
-from anon_python_sdk import Circuit, CircuitPurpose, CircuitBuildFlag, CircuitState, NodeSelectionFlag, Rule, Relay, Control, Flag
+from anon_python_sdk import Circuit, CircuitPurpose, CircuitBuildFlag, CircuitBuildState, Relay, Control, Flag
 from typing import List
 import random
 
 
-def circuit_establish_circuit(purpose: CircuitPurpose, flags: List[CircuitBuildFlag], len: int = 3) -> Circuit:
-    """Main function to establish a circuit."""
-
-    state: CircuitState = CircuitState(
-        need_capacity=CircuitBuildFlag.NEED_CAPACITY in flags,
-        need_uptime=CircuitBuildFlag.NEED_UPTIME in flags,
-        onehop_tunnel=CircuitBuildFlag.ONEHOP_TUNNEL in flags,
-        is_internal=CircuitBuildFlag.IS_INTERNAL in flags,
-        is_ipv6_selftest=CircuitBuildFlag.IS_IPV6_SELFTEST in flags,
-        need_conflux=CircuitBuildFlag.NEED_CONFLUX in flags,
+def build_circuit_path(control: Control, desired_exit_countries: List[str] = [], len: int = 2) -> List[Relay]:
+    state: CircuitBuildState = CircuitBuildState(
         desired_path_len=len,
+        excluded_nodes=[],
+        excluded_countries=[],
+        desired_exit_countries=[country.lower()
+                                for country in desired_exit_countries],
+        path=[]
     )
 
-    circuit: Circuit = Circuit(purpose=purpose, state=state)
+    state = _populate_circuit_path(control, state)
 
-    circuit = populate_circuit_path(circuit)
-
-    return circuit
+    return state.path
 
 
-def populate_circuit_path(circuit: Circuit) -> Circuit:
+def _populate_circuit_path(control: Control, state: CircuitBuildState) -> CircuitBuildState:
+    print("Populating circuit path")
     r = 0
 
     while r == 0:
-        r = onion_extend_cpath(circuit)
+        r = _onion_extend_cpath(control, state)
 
-    return circuit
+    return state
 
 
-def onion_extend_cpath(circuit: Circuit) -> int:
-
-    if circuit.state.desired_path_len >= len(circuit.path):
+def _onion_extend_cpath(control: Control, state: CircuitBuildState) -> int:
+    print("Extending circuit path")
+    print(f"Current path length: {len(state.path)}")
+    print(f"Desired path length: {state.desired_path_len}")
+    if len(state.path) >= state.desired_path_len:
         return 1
 
-    if len(circuit.path) == 0:
-        r = choose_good_entry_server(circuit)
+    if len(state.path) == 0:
+        print("Choosing entry server")
+        relay = _choose_good_entry_server(control, state)
 
-    elif len(circuit.path) == circuit.state.desired_path_len - 1:
-        r = choose_good_exit_server(circuit)
+    elif len(state.path) == state.desired_path_len - 1:
+        print("Choosing exit server")
+        relay = _choose_good_exit_server(control, state)
 
     else:
-        r = choose_good_middle_server(circuit)
+        print("Choosing middle server")
+        relay = _choose_good_middle_server(control, state)
+
+    try:
+        md = control.get_microdescriptor(relay.fingerprint)
+        state.path.append(relay)
+        print("Excluding relay", relay.nickname)
+        state.excluded_nodes.append(relay.fingerprint)
+        state.excluded_nodes.extend(md.family)
+        country = control.get_country(relay.address)
+        print("Exclude country: ", country)
+        state.excluded_countries.append(country)
+    except Exception as e:
+        print(
+            f"Failed to get microdescriptor for {relay.nickname}: {e}. Exclude relay.")
+        state.excluded_nodes.append(relay.fingerprint)
 
     return 0
 
 
-def choose_good_entry_server(circuit: Circuit) -> int:
-    flags = [NodeSelectionFlag.CRN_DIRECT_CONN, NodeSelectionFlag.CRN_NEED_GUARD,
-             NodeSelectionFlag.CRN_NEED_DESC, NodeSelectionFlag.CRN_PREF_ADDR]
-
-    rule = Rule.WEIGHT_FOR_GUARD
-
-    choise = choose_random_node(circuit, flags, rule)
-
-    return
-
-
-def choose_good_exit_server(circuit: Circuit) -> int:
-    pass
-    return 0
-
-
-def choose_good_middle_server(circuit: Circuit) -> int:
-    pass
-    return 0
-
-
-def choose_random_node(control: Control, circuit: Circuit, flags: List[NodeSelectionFlag], rule: Rule) -> Relay:
-    # control = Control.from_port()
-    # control.authenticate()
-
+def _choose_good_entry_server(control: Control, state: CircuitBuildState) -> Relay:
     relays = control.get_relays()
 
-    if NodeSelectionFlag.CRN_NEED_GUARD in flags:
-        filtered = [
-            relay for relay in relays
-            if Flag.Guard in relay.flags
-        ]
+    filtered = [
+        relay for relay in relays
+        if Flag.Guard in relay.flags and relay.fingerprint not in state.excluded_nodes
+    ]
 
-    if not filtered:
-        return None
+    filteredOut = [
+        relay for relay in filtered
+        if control.get_country(relay.address) not in state.excluded_countries
+    ]
 
-    total_bandwidth = sum(relay.bandwidth for relay in filtered)
+    filteredIn = [
+        relay for relay in filteredOut
+        if control.get_country(relay.address) not in state.desired_exit_countries
+    ]
 
-    probabilities = [relay.bandwidth / total_bandwidth for relay in filtered]
-    chosen_relay = random.choices(filtered, weights=probabilities, k=1)[0]
+    filtered = len(filteredIn) > 0 and filteredIn or filteredOut
 
+    return _choose_random_node(filtered)
+
+
+def _choose_good_exit_server(control: Control, state: CircuitBuildState) -> Relay:
+    print("Choosing exit server")
+    relays = control.get_relays()
+
+    filtered = [
+        relay for relay in relays
+        if Flag.Exit in relay.flags and Flag.BadExit not in relay.flags and relay.fingerprint not in state.excluded_nodes
+    ]
+
+    print(f"Filtered Exit 1: {len(filtered)}")
+
+    # filter out excluded countries, filter in desired exit countries
+
+    filteredOut = [
+        relay for relay in filtered
+        if control.get_country(relay.address) not in state.excluded_countries
+    ]
+
+    filteredIn = [
+        relay for relay in filteredOut
+        if control.get_country(relay.address) in state.desired_exit_countries
+    ]
+
+    filtered = len(filteredIn) > 0 and filteredIn or filteredOut
+
+    print(f"Filtered Exit 2: {len(filteredIn)}")
+
+    return _choose_random_node(filtered)
+
+
+def _choose_good_middle_server(control: Control, state: CircuitBuildState) -> int:
+    pass
+    return 0
+
+
+def _choose_random_node(relays: List[Relay]) -> Relay:
+    print(f"Choosing from {len(relays)} relays")
+    total_bandwidth = sum(relay.bandwidth for relay in relays)
+
+    probabilities = [relay.bandwidth / total_bandwidth for relay in relays]
+    chosen_relay = random.choices(relays, weights=probabilities, k=1)[0]
+    print(f"Chose relay: {chosen_relay.nickname}")
     return chosen_relay

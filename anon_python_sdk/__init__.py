@@ -12,7 +12,8 @@ from .exceptions import AnonError
 from .models import *
 from .process import Process
 from .starter import Anon
-from .template import choose_random_node
+from .template import build_circuit_path
 
-__all__ = [Config, Control, Process, Socks, CircuitStatus, StreamStatus, CircuitBuildFlag, NodeSelectionFlag,
-           Rule, StreamPurpose, AnonError, Circuit, Hop, Relay, Anon, VPNRouting, VPNConfig]
+__all__ = ["Config", "Control", "Process", "Socks", "CircuitStatus", "StreamStatus", "CircuitBuildFlag",
+           "NodeSelectionFlag", "Rule", "StreamPurpose", "AnonError", "Circuit", "Hop", "Relay", "Anon",
+           "VPNRouting", "VPNConfig", "Anon", "build_circuit_path", "CircuitPurpose", "Flag", "EventType", "Stream"]

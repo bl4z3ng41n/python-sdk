@@ -62,28 +62,6 @@ class CircuitBuildFlag(Enum):
     NEED_CONFLUX = 'NEED_CONFLUX'
 
 
-@dataclass
-class CircuitState:
-    need_capacity: bool
-    need_uptime: bool
-    onehop_tunnel: bool
-    is_internal: bool
-    is_ipv6_selftest: bool
-    need_conflux: bool
-    desired_path_len: int
-
-
-@dataclass
-class Circuit:
-    id: str
-    state: CircuitState
-    path: List[Hop]
-    created: datetime
-    status: CircuitStatus
-    purpose: CircuitPurpose
-    # other fields are omitted for now
-
-
 class Flag(Enum):
     Authority = 'Authority'
     BadExit = 'BadExit'
@@ -129,6 +107,25 @@ class Relay:
     exit_policy: object
     protocols: object
     microdescriptor_hashes: object
+
+
+@dataclass
+class CircuitBuildState:
+    desired_path_len: int
+    excluded_nodes: List[str]
+    excluded_countries: List[str]
+    desired_exit_countries: List[str]
+    path: List[Relay]
+
+
+@dataclass
+class Circuit:
+    id: str
+    path: List[Hop]
+    created: datetime
+    status: CircuitStatus
+    purpose: CircuitPurpose
+    # other fields are omitted for now
 
 
 class EventType(Enum):
