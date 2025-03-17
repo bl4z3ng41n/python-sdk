@@ -5,8 +5,9 @@ from typing import List, Optional, Sequence, Tuple, Union, Mapping, Callable, Aw
 import stem.control
 from stem.descriptor.router_status_entry import RouterStatusEntryV3
 from stem.response.events import CircuitEvent, StreamEvent, AddrMapEvent
+from stem.descriptor.server_descriptor import RelayDescriptor
 
-from .models import Circuit, Hop, Relay, Stream, CircuitStatus, CircuitPurpose, Flag, EventType, Event, AddrMap, StreamStatus, StreamPurpose, Microdescriptor
+from .models import *
 
 
 class Control():
@@ -57,6 +58,9 @@ class Control():
             relay)
         return self._to_microdescriptor(microdescriptor)
 
+    def get_exit_policy(self, relay: str) -> stem.exit_policy.ExitPolicy:
+        return self._controller.get_server_descriptor(relay).exit_policy
+
     def get_network_statuses(self, relays: Optional[Sequence[str]] = None) -> List[Relay]:
         router_statuses: List[RouterStatusEntryV3] = self._controller.get_network_statuses(
             relays)
@@ -78,7 +82,7 @@ class Control():
         self._controller.attach_stream(stream_id, circuit_id, exiting_hop)
 
     def add_event_listener(self, listener: Callable[[Event], Union[None, Awaitable[None]]], eventType: EventType) -> None:
-        
+
         def _wrapped_listener(event: stem.response.events.Event):
             wrapped_event = self._to_wrapped_event(event)
             listener(wrapped_event)
@@ -136,6 +140,17 @@ class Control():
                     error=event.error,
                     utc_expiry=event.utc_expiry,
                     cached=event.cached,
+                )
+
+            case EventType.WARN:
+                return Log(
+                    type=type,
+                    message=event.message,
+                )
+            case EventType.ERROR:
+                return Log(
+                    type=type,
+                    message=event.message,
                 )
 
             case _:
@@ -197,6 +212,7 @@ class Control():
             type=EventType.STREAM,
             id=stream_event.id,
             target_address=stream_event.target_address,
+            target_port=stream_event.target_port,
             status=StreamStatus[stream_event.status],
             purpose=StreamPurpose[stream_event.purpose],
         )

@@ -162,7 +162,7 @@ class EventType(Enum):
     TB_EMPTY = 'TB_EMPTY'
     TRANSPORT_LAUNCHED = 'TRANSPORT_LAUNCHED'
     WARN = 'WARN'
-
+    
 
 @dataclass
 class Event:
@@ -198,9 +198,16 @@ class StreamPurpose(Enum):
 
 
 @dataclass
+class Log(Event):
+    message: str
+    # other fields are omitted for now
+
+
+@dataclass
 class Stream(Event):
     id: str
     target_address: str
+    target_port: int
     status: StreamStatus
     purpose: Optional[StreamPurpose]
     # other fields are omitted for now

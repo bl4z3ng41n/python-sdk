@@ -12,10 +12,6 @@ anon = Process.launch_anon(anonrc_path=config.to_file())
 control = Control.from_port()
 socks = Socks()
 
-# list possible country codes in europe
-# https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#EU
-
-
 try:
     control.authenticate()
 
