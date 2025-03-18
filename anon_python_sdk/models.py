@@ -130,7 +130,6 @@ class Circuit:
 
 class EventType(Enum):
     ADDRMAP = 'ADDRMAP'
-    AUTHDIR_NEWDESCS = 'AUTHDIR_NEWDESCS'
     BUILDTIMEOUT_SET = 'BUILDTIMEOUT_SET'
     BW = 'BW'
     CELL_STATS = 'CELL_STATS'
@@ -162,7 +161,7 @@ class EventType(Enum):
     TB_EMPTY = 'TB_EMPTY'
     TRANSPORT_LAUNCHED = 'TRANSPORT_LAUNCHED'
     WARN = 'WARN'
-    
+
 
 @dataclass
 class Event:
@@ -203,14 +202,45 @@ class Log(Event):
     # other fields are omitted for now
 
 
+class ClosureReason(Enum):
+    END = 'END'
+    PRIVATE_ADDR = 'PRIVATE_ADDR'
+    MISC = 'MISC'
+    RESOLVEFAILED = 'RESOLVEFAILED'
+    CONNECTREFUSED = 'CONNECTREFUSED'
+    EXITPOLICY = 'EXITPOLICY'
+    DESTROY = 'DESTROY'
+    DONE = 'DONE'
+    TIMEOUT = 'TIMEOUT'
+    NOROUTE = 'NOROUTE'
+    HIBERNATING = 'HIBERNATING'
+    INTERNAL = 'INTERNAL'
+    RESOURCELIMIT = 'RESOURCELIMIT'
+    CONNRESET = 'CONNRESET'
+    TORPROTOCOL = 'TORPROTOCOL'
+    NOTDIRECTORY = 'NOTDIRECTORY'
+
+
+class Source(Enum):
+    CACHE = 'CACHE'
+    EXIT = 'EXIT'
+
+
 @dataclass
 class Stream(Event):
     id: str
+    target: str
     target_address: str
     target_port: int
     status: StreamStatus
-    purpose: Optional[StreamPurpose]
-    # other fields are omitted for now
+    purpose: StreamPurpose
+    circ_id: str
+    reason: ClosureReason
+    remote_reason: ClosureReason
+    source: Source
+    source_addr: str
+    source_address: str
+    source_port: int
 
 
 @dataclass

@@ -87,12 +87,19 @@ class Control():
             wrapped_event = self._to_wrapped_event(event)
             listener(wrapped_event)
 
-        self._listener_map[listener] = _wrapped_listener
+        listeners = self._listener_map[listener] if listener in self._listener_map else None
+        if listeners:
+            listeners.append(_wrapped_listener)
+        else:
+            self._listener_map[listener] = [_wrapped_listener]
         self._controller.add_event_listener(_wrapped_listener, eventType.name)
 
     def remove_event_listener(self, listener: Callable[[Event], Union[None, Awaitable[None]]]) -> None:
-        _wrapped_listener = self._listener_map.pop(listener)
-        self._controller.remove_event_listener(_wrapped_listener)
+        listeners = self._listener_map[listener] if listener in self._listener_map else None
+        if listeners:
+            for _wrapped_listener in listeners:
+                self._controller.remove_event_listener(_wrapped_listener)
+            del self._listener_map[listener]
 
     def set_conf(self, param: str, value: Union[str, Sequence[str]]) -> None:
         self.set_options({param: value}, False)
@@ -129,7 +136,10 @@ class Control():
         type = EventType[event.type]
         match type:
             case EventType.STREAM:
-                return self._to_stream(event)
+                try:
+                    return self._to_stream(event)
+                except AttributeError as e:
+                    print(f"Failed to convert event to Stream: {e}")
 
             case EventType.ADDRMAP:
                 return AddrMap(
@@ -211,10 +221,18 @@ class Control():
         return Stream(
             type=EventType.STREAM,
             id=stream_event.id,
+            target=stream_event.target,
             target_address=stream_event.target_address,
             target_port=stream_event.target_port,
             status=StreamStatus[stream_event.status],
-            purpose=StreamPurpose[stream_event.purpose],
+            purpose=getattr(StreamPurpose, str(stream_event.purpose), None),
+            circ_id=stream_event.circ_id,
+            reason=stream_event.reason,
+            remote_reason=stream_event.remote_reason,
+            source=getattr(Source, str(stream_event.source), None),
+            source_addr=stream_event.source_addr,
+            source_address=stream_event.source_address,
+            source_port=stream_event.source_port
         )
 
     # useful methods
