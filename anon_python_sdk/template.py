@@ -117,8 +117,12 @@ def build_circuit_path(control: Control, desired_exit_countries: List[str] = [],
         excluded_countries=[],
         desired_exit_countries=[country.lower()
                                 for country in desired_exit_countries],
-        path=[]
+        path=[],
+        exit=None,
+        relays=None
     )
+
+    onion_pick_cpath_exit(control, state)
 
     state = _populate_circuit_path(control, state)
     print("Circuit path built:", state.path)
@@ -146,14 +150,17 @@ def _onion_extend_cpath(control: Control, state: CircuitBuildState) -> int:
     if len(state.path) == 0:
         print("Choosing entry server")
         relay = _choose_good_entry_server(control, state)
+        print("!!! Chose entry server", relay)
 
     elif len(state.path) == state.desired_path_len - 1:
         print("Choosing exit server")
         relay = _choose_good_exit_server(control, state)
+        print("!!! Chose exit server", relay)
 
     else:
         print("Choosing middle server")
         relay = _choose_good_middle_server(control, state)
+        print("!!! Chose middle server", relay)
 
     try:
         md = control.get_microdescriptor(relay.fingerprint)
@@ -173,46 +180,60 @@ def _onion_extend_cpath(control: Control, state: CircuitBuildState) -> int:
 
 
 def _choose_good_entry_server(control: Control, state: CircuitBuildState) -> Relay:
-    relays = control.get_relays()
+    print("Choosing entry server")
+    if not state.relays:    
+        state.relays = control.get_relays()
 
     # filter in stable, valid, running, fast
 
     filtered = [
-        relay for relay in relays
+        relay for relay in state.relays
         if Flag.Stable in relay.flags and Flag.Valid in relay.flags and Flag.Running in relay.flags and Flag.Fast in relay.flags
     ]
+
+    print(f"Filtered Entry 1: {len(filtered)}")
 
     filtered = [
         relay for relay in filtered
         if Flag.Guard in relay.flags and relay.fingerprint not in state.excluded_nodes
     ]
 
+    print(f"Filtered Entry 2: {len(filtered)}")
+
     filteredOut = [
         relay for relay in filtered
         if control.get_country(relay.address) not in state.excluded_countries
     ]
+
+    print(f"Filtered Entry 3: {len(filteredOut)}")
 
     filteredIn = [
         relay for relay in filteredOut
         if control.get_country(relay.address) not in state.desired_exit_countries
     ]
 
+    print(f"Filtered Entry 4: {len(filteredIn)}")
+
     filtered = len(filteredIn) > 0 and filteredIn or filteredOut
 
-    return _choose_random_node(filtered)
+    relay = _choose_random_node(filtered)
+
+    print(f"Chose ENTRY relay: {relay.nickname}")
+
+    return relay
 
 
 def _choose_good_exit_server(control: Control, state: CircuitBuildState) -> Relay:
     print("Choosing exit server")
-    relays = control.get_relays()
 
-    # filtered = [
-    #     relay for relay in relays
-    #     if Flag.Stable in relay.flags and Flag.Valid in relay.flags and Flag.Running in relay.flags and Flag.Fast in relay.flags
-    # ]
+    if state.exit:
+        return state.exit
+
+    if not state.relays:    
+        state.relays = control.get_relays()
 
     filtered = [
-        relay for relay in relays
+        relay for relay in state.relays
         if Flag.Exit in relay.flags and Flag.BadExit not in relay.flags and relay.fingerprint not in state.excluded_nodes
     ]
 
@@ -225,10 +246,11 @@ def _choose_good_exit_server(control: Control, state: CircuitBuildState) -> Rela
         if control.get_country(relay.address) not in state.excluded_countries
     ]
 
-    filteredIn = [
-        relay for relay in filteredOut
-        if control.get_country(relay.address) in state.desired_exit_countries
-    ]
+    if len(state.desired_exit_countries) > 0:
+        filteredIn = [
+            relay for relay in filteredOut
+            if control.get_country(relay.address) in state.desired_exit_countries
+        ]
 
     filtered = len(filteredIn) > 0 and filteredIn or filteredOut
 
@@ -237,9 +259,30 @@ def _choose_good_exit_server(control: Control, state: CircuitBuildState) -> Rela
     return _choose_random_node(filtered)
 
 
-def _choose_good_middle_server(control: Control, state: CircuitBuildState) -> int:
-    pass
-    return 0
+def _choose_good_middle_server(control: Control, state: CircuitBuildState) -> Relay:
+    print("Choosing middle server")
+    if not state.relays:    
+        state.relays = control.get_relays()
+
+    # filter out exit relays
+    filtered = [
+        relay for relay in state.relays
+        if Flag.Exit not in relay.flags
+    ]
+
+    # filter in stable, valid, running
+    filtered = [
+        relay for relay in relays
+        if Flag.Stable in relay.flags and Flag.Valid in relay.flags and Flag.Running in relay.flags
+    ]
+
+    # filter out excluded nodes
+    filtered = [
+        relay for relay in filtered
+        if relay.fingerprint not in state.excluded_nodes
+    ]
+
+    return _choose_random_node(filtered)
 
 
 def _choose_random_node(relays: List[Relay]) -> Relay:
@@ -250,3 +293,44 @@ def _choose_random_node(relays: List[Relay]) -> Relay:
     chosen_relay = random.choices(relays, weights=probabilities, k=1)[0]
     print(f"Chose relay: {chosen_relay.nickname}")
     return chosen_relay
+
+
+def onion_pick_cpath_exit(control: Control, state: CircuitBuildState) -> bool:
+    print("Picking circuit path exit")
+    if not state.relays:    
+        state.relays = control.get_relays()
+
+    print(f"Found {len(state.relays)} relays")
+
+    # filter out exit relays
+    filtered = [
+        relay for relay in state.relays
+        if Flag.Exit in relay.flags and Flag.BadExit not in relay.flags
+    ]
+
+    # todo: unsure endless loop happened
+    while not state.exit:
+        if len(filtered) == 0:
+            print("No exit relay found")
+            return False
+
+        try:
+            print("Choosing exit relay")
+            exit = _choose_random_node(filtered)
+            print("Chose exit relay", exit.nickname)
+            md = control.get_microdescriptor(exit.fingerprint)
+            country = control.get_country(exit.address)
+            print("Exit relay country", country)
+            state.exit = exit
+            state.excluded_nodes.extend(md.family)
+            state.excluded_countries.append(country)
+            break
+        except Exception as e:
+            print(f"Failed to get microdescriptor for {exit.nickname}: {e}")
+            state.excluded_nodes.append(exit.fingerprint)
+            filtered = [
+                relay for relay in filtered
+                if relay.fingerprint not in state.excluded_nodes
+            ]
+
+    return True

@@ -116,6 +116,8 @@ class CircuitBuildState:
     excluded_countries: List[str]
     desired_exit_countries: List[str]
     path: List[Relay]
+    exit: Relay
+    relays: List[Relay]
 
 
 @dataclass

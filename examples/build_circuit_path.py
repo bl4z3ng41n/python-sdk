@@ -15,9 +15,9 @@ socks = Socks()
 try:
     control.authenticate()
 
-    pathRelays = build_circuit_path(control, ["GE", "GR", "FI", "DK"], 2)
+    pathRelays = build_circuit_path(control, ["GE", "GR", "FI", "DK"], 3)
 
-    path = [pathRelays[0].fingerprint, pathRelays[1].fingerprint]
+    path = [pathRelays[0].fingerprint, pathRelays[1].fingerprint, pathRelays[2].fingerprint]
     print(path)
 
     circuit_id = control.new_circuit(path=path, await_build=True)
