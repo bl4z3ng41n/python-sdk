@@ -79,7 +79,7 @@ class Config:
             f"SOCKSPort {self.socks_port}",
             f"ORPort {self.or_port}",
             f"ControlPort {self.control_port}",
-            f"Log notice stdout",
+            f"Log info stdout",
             f"FetchUselessDescriptors 1",
         ]
 

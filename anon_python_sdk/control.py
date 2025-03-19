@@ -157,7 +157,7 @@ class Control():
                     type=type,
                     message=event.message,
                 )
-            case EventType.ERROR:
+            case EventType.INFO:
                 return Log(
                     type=type,
                     message=event.message,

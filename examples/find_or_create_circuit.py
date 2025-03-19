@@ -21,8 +21,8 @@ try:
     time.sleep(5)
 
     def attach_stream(stream: Stream):
-        print(f"Stream status: {stream.status}. Purpose: {stream.purpose}")
-        if stream.status == StreamStatus.NEW:
+        print(f"Stream: {stream}")
+        if stream.status == StreamStatus.NEW or stream.status == StreamStatus.REMAP or stream.circ_id is None:
             try:
                 circuit_id = find_or_create_circuit(control, stream)
                 print(f"Attaching stream {stream.id} to circuit {circuit_id}")
@@ -37,14 +37,14 @@ try:
         if event.type == EventType.WARN:
             print(f"Warn: {event}")
 
-    def error_log(event: Event):
-        if event.type == EventType.ERR:
-            print(f"Error: {event}")        
+    def info_log(event: Event):
+        if event.type == EventType.INFO:
+            print(f"Info: {event}")        
 
     print("Adding warn log listener")
     control.add_event_listener(warn_log, EventType.WARN)
-    print("Adding error log listener")
-    control.add_event_listener(error_log, EventType.ERR)
+    print("Adding info log listener")
+    control.add_event_listener(info_log, EventType.INFO)
 
     print("Starting socks")
     resp = socks.get("http://ip-api.com/json")

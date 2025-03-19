@@ -118,6 +118,8 @@ class CircuitBuildState:
     path: List[Relay]
     exit: Relay
     relays: List[Relay]
+    address: str
+    port: int
 
 
 @dataclass

@@ -1,18 +1,23 @@
 from anon_python_sdk import *
+from stem.exit_policy import ExitPolicy
 from typing import List, Optional
 import random
 
 
-def find_or_create_circuit(control: Control, stream: Stream) -> Optional[str]:
+def find_or_create_circuit(control: Control, stream: Stream) -> str:
 
     circuits = control.get_circuits()
 
     print(f"Found {len(circuits)} circuits")
     print(f"Stream status: {stream.status}. Purpose: {stream.purpose}")
 
-    if stream.status != StreamStatus.NEW:
-        print("Stream is not new")
-        return None
+    # if stream.status != StreamStatus.NEW or stream.status != StreamStatus.REMAP:
+    #     print("Stream is not new")
+    #     return None
+
+    if stream.status != StreamStatus.NEW and stream.circ_id != None:
+        print("Stream is not new and has circ_id. returning circ_id")
+        return stream.circ_id
 
     print(f"Found {len(circuits)} circuits")
 
@@ -88,25 +93,38 @@ def find_or_create_circuit(control: Control, stream: Stream) -> Optional[str]:
 
 
 def _is_circuit_exit_relay_has_good_exit_policy(control: Control, circuit: Circuit, stream: Stream) -> bool:
+    print(f"Checking if circuit {circuit.id} has good exit relay")
+    
     if len(circuit.path) == 0:
         return False
 
     exit_relay = circuit.path[-1]
 
-    try:
-        md = control.get_microdescriptor(exit_relay.fingerprint)
-    except Exception as e:
-        print(f"Failed to get microdescriptor for {exit_relay.nickname}: {e}")
-        return False
+    print(f"Checking exit relay {exit_relay.nickname}")
 
     # get relay info
     relay = control.get_network_status(exit_relay.fingerprint)
+
+    print(f"Relay info: {relay}")
 
     # does exit relay has exit flag and has no bad exit flag
     if Flag.Exit not in relay.flags or Flag.BadExit in relay.flags:
         return False
 
-    # for now just use random
+    print("Exit relay has exit flag. Checking exit policy")
+
+    if stream.status == StreamStatus.REMAP:
+        return is_accepted(control, stream.address, stream.port, relay)
+    
+    print("Getting md to check if it has desc")
+
+    try:
+        md = control.get_microdescriptor(exit_relay.fingerprint)
+        print("Got md")
+    except Exception as e:
+        print(f"Failed to get microdescriptor for {exit_relay.nickname}:{e}")
+        return False
+
     return True
 
 
@@ -119,7 +137,9 @@ def build_circuit_path(control: Control, desired_exit_countries: List[str] = [],
                                 for country in desired_exit_countries],
         path=[],
         exit=None,
-        relays=None
+        relays=None,
+        address=None,
+        port=None
     )
 
     onion_pick_cpath_exit(control, state)
@@ -272,7 +292,7 @@ def _choose_good_middle_server(control: Control, state: CircuitBuildState) -> Re
 
     # filter in stable, valid, running
     filtered = [
-        relay for relay in relays
+        relay for relay in filtered
         if Flag.Stable in relay.flags and Flag.Valid in relay.flags and Flag.Running in relay.flags
     ]
 
@@ -308,6 +328,21 @@ def onion_pick_cpath_exit(control: Control, state: CircuitBuildState) -> bool:
         if Flag.Exit in relay.flags and Flag.BadExit not in relay.flags
     ]
 
+    print(f"Filtered {len(filtered)} exit relays")
+
+    # filter in desired exit countries
+    if len(state.desired_exit_countries) > 0:
+        filtered = [
+            relay for relay in filtered
+            if control.get_country(relay.address) in state.desired_exit_countries
+        ]
+
+    if state.address:
+        filtered = [
+            relay for relay in filtered
+            if is_accepted(control, state.address, state.port, relay)
+        ]
+
     # todo: unsure endless loop happened
     while not state.exit:
         if len(filtered) == 0:
@@ -334,3 +369,17 @@ def onion_pick_cpath_exit(control: Control, state: CircuitBuildState) -> bool:
             ]
 
     return True
+
+def is_accepted(control: Control, address: str, port: int, relay: Relay) -> bool:
+    print(f"Checking if relay {relay.nickname} can exit to {address}:{port}")
+    try:
+        md = control.get_microdescriptor(relay.fingerprint)
+        exit_policy: ExitPolicy = control.get_exit_policy(relay.fingerprint)
+        if not exit_policy:
+            print(f"Relay defined as EXit but doesn't have any exit policy {relay.nickname}")
+            return False
+    except Exception as e:
+        print(f"Failed to get exit policy descriptor for {relay.nickname}: {e}")
+        return False
+
+    return exit_policy.can_exit_to(address, port)

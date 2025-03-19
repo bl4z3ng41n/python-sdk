@@ -1,0 +1,5 @@
+
+
+- connection_ap_attach_pending (iterate over open connections to attach circ and handle) 
+- connection_ap_handshake_attach_circuit (attach safe circuit to connection, or create one) also check diff types of connections
+- connection_ap_handshake_rewrite_and_attach (used in controller to attach circuit to connection)
