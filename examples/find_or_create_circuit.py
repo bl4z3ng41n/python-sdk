@@ -22,7 +22,7 @@ try:
 
     def attach_stream(stream: Stream):
         print(f"Stream: {stream}")
-        if stream.status == StreamStatus.NEW or stream.status == StreamStatus.REMAP or stream.circ_id is None:
+        if (stream.status == StreamStatus.NEW or stream.status == StreamStatus.REMAP) and stream.circ_id is None:
             try:
                 circuit_id = find_or_create_circuit(control, stream)
                 print(f"Attaching stream {stream.id} to circuit {circuit_id}")

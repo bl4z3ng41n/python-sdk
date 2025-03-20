@@ -1,4 +1,4 @@
-from anon_python_sdk import Anon, VPNConfig, VPNRouting
+from anon_python_sdk import *
 
 
 anon = Anon()
