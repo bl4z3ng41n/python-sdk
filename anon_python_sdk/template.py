@@ -11,10 +11,6 @@ def find_or_create_circuit(control: Control, stream: Stream) -> str:
     print(f"Found {len(circuits)} circuits")
     print(f"Stream status: {stream.status}. Purpose: {stream.purpose}")
 
-    # if stream.status != StreamStatus.NEW or stream.status != StreamStatus.REMAP:
-    #     print("Stream is not new")
-    #     return None
-
     if stream.status != StreamStatus.NEW and stream.circ_id != None:
         print("Stream is not new and has circ_id. returning circ_id")
         return stream.circ_id
@@ -28,7 +24,7 @@ def find_or_create_circuit(control: Control, stream: Stream) -> str:
 
     print(f"Filtered {len(filtered)} circuits")
 
-    if stream.purpose != StreamPurpose.USER:
+    if stream.purpose != StreamPurpose.USER and len(filtered) > 1:
         print("Stream is not for user")
         return random.choice(filtered).id
 
@@ -42,7 +38,7 @@ def find_or_create_circuit(control: Control, stream: Stream) -> str:
     print(f"Filtered with good exit policy {len(filtered)} circuits")
 
     # get random circuit from filtered circuits
-    if len(filtered) == 0:
+    if len(filtered) <= 1:
         # close all circuits
         print("Closing all circuits")
         for circuit in circuits:
@@ -55,15 +51,15 @@ def find_or_create_circuit(control: Control, stream: Stream) -> str:
 
             try:
                 md = control.get_microdescriptor(pathRelays[-1].fingerprint)
-                exit_policy = control.get_exit_policy(
-                    pathRelays[-1].fingerprint)
-                print("Exit desc policy:", md.exit_policy)
-                print("Exit info:", pathRelays[-1])
-                print("Exit policy:", exit_policy)
+                # exit_policy = control.get_exit_policy(
+                #     pathRelays[-1].fingerprint)
+                # print("Exit desc policy:", md.exit_policy)
+                # print("Exit info:", pathRelays[-1])
+                # print("Exit policy:", exit_policy)
                 print("------------------------------------")
                 path = [pathRelays[0].fingerprint, pathRelays[1].fingerprint]
                 circuit_id = control.new_circuit(
-                    path=path, await_build=True, timeout=5)
+                    path=path, await_build=True, timeout=60)
                 print("Created circuit", circuit_id)
             except Exception as e:
                 print(
