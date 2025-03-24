@@ -1,5 +1,4 @@
-from anon_python_sdk import Anon
-
+from anon_starter import Anon
 
 anon = Anon()
 

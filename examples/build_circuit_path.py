@@ -1,5 +1,5 @@
 from anon_python_sdk import *
-
+from path_selection import build_circuit_path
 
 # Create a configuration
 config = Config(

@@ -11,9 +11,7 @@ from .socks import Socks
 from .exceptions import AnonError
 from .models import *
 from .process import Process
-from .starter import Anon
-from .template import build_circuit_path, find_or_create_circuit
 
-__all__ = ["Config", "Control", "Process", "Socks", "CircuitStatus", "StreamStatus", "CircuitBuildFlag", "find_or_create_circuit", "Source", "ClosureReason",
-           "NodeSelectionFlag", "Rule", "StreamPurpose", "AnonError", "Circuit", "Hop", "Relay", "Anon", "CircuitBuildState", "AddrMap",
-           "VPNRouting", "VPNConfig", "Anon", "build_circuit_path", "CircuitPurpose", "Flag", "EventType", "Stream", "Event", "Log"]
+__all__ = ["Config", "Control", "Process", "Socks", "CircuitStatus", "StreamStatus", "CircuitBuildFlag", "Source", "ClosureReason",
+           "NodeSelectionFlag", "Rule", "StreamPurpose", "AnonError", "Circuit", "Hop", "Relay", "AddrMap", "CircuitBuildFlag",
+           "VPNRouting", "VPNConfig", "CircuitPurpose", "Flag", "EventType", "Stream", "Event", "Log"]

@@ -1,7 +1,21 @@
 from anon_python_sdk import *
 from stem.exit_policy import ExitPolicy
-from typing import List, Optional
+from typing import List
 import random
+from dataclasses import dataclass
+
+
+@dataclass
+class CircuitBuildState:
+    desired_path_len: int
+    excluded_nodes: List[str]
+    excluded_countries: List[str]
+    desired_exit_countries: List[str]
+    path: List[Relay]
+    exit: Relay
+    relays: List[Relay]
+    address: str
+    port: int
 
 
 def find_or_create_circuit(control: Control, stream: Stream) -> str:
@@ -90,7 +104,7 @@ def find_or_create_circuit(control: Control, stream: Stream) -> str:
 
 def _is_circuit_exit_relay_has_good_exit_policy(control: Control, circuit: Circuit, stream: Stream) -> bool:
     print(f"Checking if circuit {circuit.id} has good exit relay")
-    
+
     if len(circuit.path) == 0:
         return False
 
@@ -111,7 +125,7 @@ def _is_circuit_exit_relay_has_good_exit_policy(control: Control, circuit: Circu
 
     if stream.status == StreamStatus.REMAP:
         return is_accepted(control, stream.address, stream.port, relay)
-    
+
     print("Getting md to check if it has desc")
 
     try:
@@ -197,7 +211,7 @@ def _onion_extend_cpath(control: Control, state: CircuitBuildState) -> int:
 
 def _choose_good_entry_server(control: Control, state: CircuitBuildState) -> Relay:
     print("Choosing entry server")
-    if not state.relays:    
+    if not state.relays:
         state.relays = control.get_relays()
 
     # filter in stable, valid, running, fast
@@ -245,7 +259,7 @@ def _choose_good_exit_server(control: Control, state: CircuitBuildState) -> Rela
     if state.exit:
         return state.exit
 
-    if not state.relays:    
+    if not state.relays:
         state.relays = control.get_relays()
 
     filtered = [
@@ -277,7 +291,7 @@ def _choose_good_exit_server(control: Control, state: CircuitBuildState) -> Rela
 
 def _choose_good_middle_server(control: Control, state: CircuitBuildState) -> Relay:
     print("Choosing middle server")
-    if not state.relays:    
+    if not state.relays:
         state.relays = control.get_relays()
 
     # filter out exit relays
@@ -313,7 +327,7 @@ def _choose_random_node(relays: List[Relay]) -> Relay:
 
 def onion_pick_cpath_exit(control: Control, state: CircuitBuildState) -> bool:
     print("Picking circuit path exit")
-    if not state.relays:    
+    if not state.relays:
         state.relays = control.get_relays()
 
     print(f"Found {len(state.relays)} relays")
@@ -336,7 +350,7 @@ def onion_pick_cpath_exit(control: Control, state: CircuitBuildState) -> bool:
     if state.address:
         filtered = [
             relay for relay in filtered
-            if is_accepted(control, state.address, state.port, relay)
+            if control.is_accepted(state.address, state.port, relay)
         ]
 
     # todo: unsure endless loop happened
@@ -366,16 +380,3 @@ def onion_pick_cpath_exit(control: Control, state: CircuitBuildState) -> bool:
 
     return True
 
-def is_accepted(control: Control, address: str, port: int, relay: Relay) -> bool:
-    print(f"Checking if relay {relay.nickname} can exit to {address}:{port}")
-    try:
-        md = control.get_microdescriptor(relay.fingerprint)
-        exit_policy: ExitPolicy = control.get_exit_policy(relay.fingerprint)
-        if not exit_policy:
-            print(f"Relay defined as EXit but doesn't have any exit policy {relay.nickname}")
-            return False
-    except Exception as e:
-        print(f"Failed to get exit policy descriptor for {relay.nickname}: {e}")
-        return False
-
-    return exit_policy.can_exit_to(address, port)

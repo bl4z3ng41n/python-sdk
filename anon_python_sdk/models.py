@@ -110,19 +110,6 @@ class Relay:
 
 
 @dataclass
-class CircuitBuildState:
-    desired_path_len: int
-    excluded_nodes: List[str]
-    excluded_countries: List[str]
-    desired_exit_countries: List[str]
-    path: List[Relay]
-    exit: Relay
-    relays: List[Relay]
-    address: str
-    port: int
-
-
-@dataclass
 class Circuit:
     id: str
     path: List[Hop]

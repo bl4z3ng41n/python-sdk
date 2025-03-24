@@ -237,6 +237,21 @@ class Control():
 
     # useful methods
 
+    def is_accepted(self, address: str, port: int, relay: Relay) -> bool:
+        print(f"Checking if relay {relay.nickname} can exit to {address}:{port}")
+        try:
+            exit_policy: stem.exit_policy.ExitPolicy = self.get_exit_policy(relay.fingerprint)
+            if not exit_policy:
+                print(
+                    f"Relay defined as EXit but doesn't have any exit policy {relay.nickname}")
+                return False
+        except Exception as e:
+            print(
+                f"Failed to get exit policy descriptor for {relay.nickname}: {e}")
+            return False
+
+        return exit_policy.can_exit_to(address, port)
+
     def get_country(self, address: str) -> str:
         return self.get_info(f'ip-to-country/{address}')
 
@@ -268,8 +283,6 @@ class Control():
 
     def filter_relays_by_countries(self, relays: List[Relay], *countries: str) -> List[Relay]:
         return [relay for relay in relays if all(country in self.get_country(relay.address) for country in countries)]
-
-    # templates
 
     def get_circuits_with_relay_info_and_country(self):
         circuits = self.get_circuits()
