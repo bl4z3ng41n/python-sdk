@@ -1,27 +1,34 @@
-from anon_python_sdk import ControlClient, AnonRunner, AnonConfig
+from anyone_protocol_sdk import Control, Config, Process
 
 
 # Create a configuration
-config = AnonConfig(
+config = Config(
     auto_terms_agreement=True
 )
 
-# Initialize and start the runner
-runner = AnonRunner(config)
-runner.start()
-
-client = ControlClient()
+# Initialize and start
+anon = Process.launch_anon(anonrc_path=config.to_file())
+client = Control.from_port()
 
 try:
-    client.connect()
-    circuits = client.get_circuits()
+    client.authenticate()
+    circuits = client.get_circuits_with_relay_info_and_country()
     for circuit in circuits:
-        print(f"Circuit ID: {circuit.id}, Status: {circuit.status}")
-        print(f"  Purpose: {circuit.purpose}")
-        print(f"  Time Created: {circuit.time_created}")
+        print(f"Circuit ID: {circuit['id']}")
+        print(f"  Time Created: {circuit['created']}")
+        print(f"  Status: {circuit['status']}")
+        print(f"  Purpose: {circuit['purpose']}")
         print("  Path:")
-        for relay in circuit.path:
-            print(f"    Fingerprint: {relay.fingerprint}, Nickname: {relay.nickname}")
+        for relay in circuit['relays']:
+            print(f"    Fingerprint: {relay['fingerprint']}")
+            print(f"    Nickname: {relay['nickname']}")
+            print(f"    Address: {relay['address']}")
+            print(f"    Country: {relay['country']}")
+            print(f"    ORPort: {relay['or_port']}")
+            print(f"    Flags: {', '.join(f.name for f in relay['flags'])}")
+            print(f"    Bandwidth: {relay['bandwidth']}")
+            print()
+
 finally:
     client.close()
-    runner.stop()
+    anon.stop()

@@ -55,7 +55,7 @@ pip install .
 ### Run Anon Node
 
 ```python
-from anon_python_sdk import AnonRunner, AnonConfig
+from anyone_protocol_sdk import AnonRunner, AnonConfig
 import time
 
 # Create a configuration
