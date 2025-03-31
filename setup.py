@@ -51,7 +51,7 @@ class CustomInstallCommand(install):
 
         signed = "-signed" if system == "windows" else ""
         asset_name = f"anon-live-{platform_name}{signed}-{arch_name}.zip"
-        binary_dir = Path.home() / ".anon_python_sdk" / "bin"
+        binary_dir = Path.home() / ".anyone_protocol_sdk" / "bin"
         binary_dir.mkdir(parents=True, exist_ok=True)
 
         # Fetch release data
@@ -92,11 +92,11 @@ class CustomInstallCommand(install):
 
 # Standard setup.py configuration
 setup(
-    name="anon_python_sdk",
-    version="0.0.11",
+    name="anyone_protocol_sdk",
+    version="0.0.1b",
     description="Python SDK for Anon",
     packages=find_packages(),
-    package_data={"anon_python_sdk": ["bin/*"]},
+    package_data={"anyone_protocol_sdk": ["bin/*"]},
     include_package_data=True,
     install_requires=[
         "requests[socks]",

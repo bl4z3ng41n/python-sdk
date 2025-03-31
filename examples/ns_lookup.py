@@ -1,4 +1,4 @@
-from anon_python_sdk import Config, Process, Control, Socks, EventType, AddrMap
+from anyone_protocol_sdk import Config, Process, Control, Socks, EventType, AddrMap
 import time
 
 

@@ -2,7 +2,7 @@ from pathlib import Path
 import platform
 
 # Path to the binary directory and default anonrc file
-BINARY_DIR = Path.home() / ".anon_python_sdk" / "bin"
+BINARY_DIR = Path.home() / ".anyone_protocol_sdk" / "bin"
 
 # Platform-specific binary names
 PLATFORM_MAP = {

@@ -1,4 +1,4 @@
-from anon_python_sdk import Process, Control, Socks
+from anyone_protocol_sdk import Process, Control, Socks
 import time
 
 

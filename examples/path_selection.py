@@ -1,4 +1,4 @@
-from anon_python_sdk import *
+from anyone_protocol_sdk import *
 from stem.exit_policy import ExitPolicy
 from typing import List
 import random

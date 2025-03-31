@@ -1,4 +1,4 @@
-from anon_python_sdk import Socks, Config, Process
+from anyone_protocol_sdk import Socks, Config, Process
 
 
 # Create a configuration

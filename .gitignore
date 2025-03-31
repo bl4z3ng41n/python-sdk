@@ -1,11 +1,10 @@
 venv/
 build/
-anon_python_sdk.egg-info
+anyone_protocol_sdk.egg-info
 .pytest_cache
 tests/__pycache__
 dist/
-anon_python_sdk/__pycache__
+anyone_protocol_sdk/__pycache__
 man.txt
 anonrc
 .idea/
-

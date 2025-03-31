@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock
 from stem.control import Controller
-from anon_python_sdk import Control
+from anyone_protocol_sdk import Control
 
 
 class TestControl(unittest.TestCase):

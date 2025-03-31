@@ -1,4 +1,4 @@
-from anon_python_sdk import *
+from anyone_protocol_sdk import *
 from anon_starter import Anon
 
 anon = Anon()

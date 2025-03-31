@@ -1,4 +1,4 @@
-from anon_python_sdk import Config, Process, Control
+from anyone_protocol_sdk import Config, Process, Control
 
 
 # Create a configuration

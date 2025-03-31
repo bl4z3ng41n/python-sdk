@@ -1,4 +1,4 @@
-from anon_python_sdk import Control, Process, Config, Socks, StreamStatus, Flag, EventType, Stream
+from anyone_protocol_sdk import Control, Process, Config, Socks, StreamStatus, Flag, EventType, Stream
 
 print("Starting Anon...")
 # Create a configuration

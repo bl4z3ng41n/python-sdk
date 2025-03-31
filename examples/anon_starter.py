@@ -1,4 +1,4 @@
-from anon_python_sdk import Control, Process, Config, Socks, StreamStatus, VPNConfig, Flag, EventType, Stream
+from anyone_protocol_sdk import Control, Process, Config, Socks, StreamStatus, VPNConfig, Flag, EventType, Stream
 import random
 
 

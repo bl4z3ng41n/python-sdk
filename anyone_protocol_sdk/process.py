@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Callable, Dict, Optional, Sequence, Union
-from anon_python_sdk.binary import get_binary_path
+from anyone_protocol_sdk.binary import get_binary_path
 
 import subprocess
 import stem.process

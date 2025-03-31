@@ -1,4 +1,4 @@
-from anon_python_sdk import Control, Process, Config
+from anyone_protocol_sdk import Control, Process, Config
 
 print("Starting Anon...")
 # Create a configuration
