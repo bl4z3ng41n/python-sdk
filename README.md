@@ -23,19 +23,19 @@ The **Anon Python SDK** is a Python interface for the Anon network, enabling dev
 Install the SDK directly from PyPI:
 
 ```bash
-pip install anon-python-sdk
+pip install anyone-protocol-sdk
 ```
 
 Install the SDk with specific version:
 
 ```bash
-pip install anon-python-sdk==0.0.10
+pip install anyone-protocol-sdk==0.0.1b0
 ```
 
 Uninstall the SDK:
 
 ```bash
-pip uninstall anon-python-sdk
+pip uninstall anyone-protocol-sdk
 ```
 
 ### From Source
@@ -43,8 +43,8 @@ pip uninstall anon-python-sdk
 Clone the repository and install the SDK:
 
 ```bash
-git clone https://github.com/anyone-protocol/anon-python-sdk.git
-cd anon-python-sdk
+git clone https://github.com/anyone-protocol/python-sdk.git
+cd python-sdk
 pip install .
 ```
 
@@ -55,23 +55,24 @@ pip install .
 ### Run Anon Node
 
 ```python
-from anyone_protocol_sdk import AnonRunner, AnonConfig
-import time
+from anon_python_sdk import Config, Process
+
 
 # Create a configuration
-config = AnonConfig(
+config = Config(
     auto_terms_agreement=True
 )
 
-# Initialize the runner
-runner = AnonRunner(config)
+anon = None
 
 try:
-    # Start Anon
-    runner.start()
-    # Perform tasks
+    anon = Process.launch_anon(anonrc_path=config.to_file())
+    print("Anon is running...")
+except Exception as e:
+    print(f"Anon failed to start: {e}")
 finally:
-    runner.stop()
+    anon.stop()
+    print("Anon has stopped.")
 ```
 
 ### More Examples
